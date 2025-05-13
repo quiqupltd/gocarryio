@@ -1,6 +1,6 @@
 # Quiqup Carryio
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/quiqupltd/go-carryio.svg)](https://pkg.go.dev/github.com/quiqupltd/go-carryio)
+[![Go Reference](https://pkg.go.dev/badge/github.com/quiqupltd/gocarryio.svg)](https://pkg.go.dev/github.com/quiqupltd/gocarryio)
 
 The Quiqup Carryio API client is a golang client implemented using oapi-codegen.
 
