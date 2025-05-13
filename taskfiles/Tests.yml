@@ -1,0 +1,40 @@
+version: '3'
+
+tasks:
+  install-go-test-coverage:
+    desc: 'Install the go-test-coverage tool'
+    cmds:
+      - go install github.com/vladopajic/go-test-coverage/v2@latest
+
+  check-coverage:
+    desc: 'Check the coverage of the tests using go-test-coverage'
+    deps: [install-go-test-coverage, coverage]
+    env:
+      GOBIN: '{{.GOPATH}}/bin'
+    cmds:
+      - '{{.GOBIN}}/go-test-coverage --config=./.testcoverage.yml'
+    vars:
+      GOPATH:
+        sh: go env GOPATH
+
+  lint:
+    desc: 'Run the linter'
+    sources:
+      - '**/*.go'
+    cmds:
+      - golangci-lint run
+
+  test:
+    desc: 'Run the tests'
+    sources:
+      - '**/*.go'
+    cmds:
+      - go test -json -v ./... 2>&1 | tee /tmp/gotest.log | go tool gotestfmt
+
+  coverage:
+    desc: 'Run the tests and generate a coverage report'
+    sources:
+      - '**/*.go'
+    cmds:
+      - go test -count=1 -coverprofile=./cover.out -covermode=atomic ./...
+      - go tool cover -html=./cover.out

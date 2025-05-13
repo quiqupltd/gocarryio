@@ -1,0 +1,5772 @@
+openapi: 3.0.1
+info:
+  title: Carriyo Shipping API
+  contact:
+    name: Carriyo Support
+    url: 'https://help.carrriyo.com'
+    email: support@carriyo.com
+  license:
+    name: ''
+  version: ''
+servers:
+  - url: 'https://api.carriyo.com'
+  - url: 'https://demo-api.carriyo.com'
+security:
+  - OAuth2: []
+tags:
+  - name: shipments
+  - name: carrier-accounts
+  - name: manifests
+  - name: attributes
+  - name: automation-rules
+  - name: service-levels
+paths:
+  '/shipments':
+    get:
+      tags:
+        - shipments
+      summary: List Shipments
+      description: |-
+        This endpoint returns a paginated list of shipments that match the specified search criteria.
+
+        You can use the `search_string` parameter to search for shipments alongside other filter, sort, and pagination options.
+
+        > Note: This endpoint has a monthly usage limit tied to your account's shipment quota. Once the monthly limit is exceeded, further requests to this endpoint will be blocked.
+      operationId: list-shipments
+      parameters:
+        - name: search_string
+          in: query
+          required: false
+          schema:
+            type: string
+          description: The search string to find shipments using shipment data such as carrier tracking number, order reference, shipment reference, customer name, email etc.
+        - name: order_ref
+          in: query
+          required: false
+          schema:
+            type: string
+          description: The string to be used to fetch shipments for a given order reference.
+        - name: merchant
+          in: query
+          required: false
+          schema:
+            type: string
+          description: The merchant parameter filters shipments for a given merchant. This parameter can be used multiple times to filter results for multiple merchants.
+        - name: shipment_type
+          in: query
+          required: false
+          schema:
+            type: string
+          description: The shipment type can either be `forward` or `reverse`. If not passed, then both types of shipments will be included in the results.
+        - name: creation_date_from
+          in: query
+          required: false
+          schema:
+            type: string
+          description: The start date in ISO 8601 format to filter the results using shipment creation date.
+        - name: creation_date_to
+          in: query
+          required: false
+          schema:
+            type: string
+          description: The end date in ISO 8601 format to filter the results using shipment creation date.
+        - name: update_date_from
+          in: query
+          required: false
+          schema:
+            type: string
+          description: The start date in ISO 8601 format to filter results, returning shipments that were either created OR updated during this time period.
+        - name: update_date_to
+          in: query
+          required: false
+          schema:
+            type: string
+          description: The end date in ISO 8601 format to filter results, returning shipments that were either created OR updated during this time period.
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: string
+          description: The page number of the result set, starting from 0. Defaults to the first page (page 0).
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: string
+          description: The number of results to be included in the response, ranging from 10 to 100. Defaults to page size of 10.
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/shipment-object'
+      security:
+        - OAuth2: []
+    post:
+      tags:
+        - shipments
+      summary: Create Shipment
+      description: |-
+        The **Create Shipment** endpoint allows the creation of a new shipment in Carriyo, generating a unique shipment ID. Merchants can specify a particular carrier account or rely on Carriyo to automatically assign a carrier based on predefined automation rules.
+
+        ### Key Concepts
+
+        ---
+
+        #### Forward vs Reverse Shipments
+
+        This endpoint supports the creation of both **forward** and **reverse** shipments, determined by the `entity_type` parameter:
+
+        - **Forward Shipment**: Standard shipment from the merchant to the customer.
+        - **Reverse Shipment**: Return shipment, where the customer sends items back to the merchant.
+
+        ---
+
+        #### Draft, Confirmed, and Prebooked Shipments
+
+        You can create a shipment as either a **draft**, **confirmed**, or **prebooked** shipment:
+
+        - **Draft Shipments**:
+          - Used to create a shipment in Carriyo for initial visibility before processing is complete. This is useful when shipment details (e.g., parcel information) arenâ€™t yet available.
+          - Setting the `draft` query parameter to `true` creates the shipment in draft status without booking it with a carrier.
+          - Draft shipments remain unbooked until confirmed, and they are not sent to the carrier.
+
+        - **Confirmed Shipments**:
+          - If the `draft` query parameter is omitted or set to `false`, Carriyo treats the shipment as confirmed, assigns it to a carrier, and immediately initiates a booking request.
+          - **Pending Status**: If Carriyoâ€™s validations pass and a valid carrier is assigned, the status is set to **pending**, and Carriyo sends the booking request to the carrier.
+            > *Note:* The API will respond with the status `pending`, without waiting for the carrier's response.
+          - **Error Status**: If Carriyoâ€™s validations fail, the shipment status is set to **error**, and the response will include specific error details.
+
+        - **Prebooked Shipments**:
+          - If you wish to track a shipment already booked outside Carriyo, create a **prebooked shipment** by setting the `pre_booked` parameter to `true` and providing the carrierâ€™s prebooking information, such as in this example:
+
+            ```json
+            {
+              "pre_booked": true,
+              "pre_booking_info": {
+                "input_carrier": "DHL",
+                "carrier_tracking_no": "1234567890"
+              }
+            }
+            ```
+
+        ---
+
+        #### Shipment Booking and Status Updates
+
+        Once Carriyo sends the booking request to the carrier:
+
+        - **Successful Booking**: If the carrier successfully books the shipment, Carriyo updates the shipment status to **booked** and assigns the carrier tracking number.
+        - **Booking Error**: If the carrier rejects the booking request, the shipment status is updated to **error**.
+
+        After booking, a label is generated, and Carriyo pushes all status updates, including label details, back to the merchant via webhooks.
+      operationId: create-shipment
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          required: true
+          schema:
+            type: string
+            default: application/json
+        - schema:
+            type: boolean
+          in: query
+          name: draft
+          description: Pass true for draft shipment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: '#/components/schemas/shipment-draft-request'
+                - $ref: '#/components/schemas/shipment-request'
+            examples:
+              Confirmed Shipment:
+                value:
+                  entity_type: FORWARD
+                  merchant: MERCHANT-ID
+                  references:
+                    partner_order_reference: new-shipment-1
+                    partner_shipment_reference: new-shipment-1
+                  payment:
+                    payment_mode: PRE_PAID
+                    total_amount: 100
+                    currency: USD
+                  parcels:
+                    - partner_parcel_reference: parcel-123
+                      weight:
+                        value: 1
+                        unit: kg
+                      dimension:
+                        width: 20
+                        height: 40
+                        depth: 40
+                        unit: cm
+                    - partner_parcel_reference: parcel-124
+                      weight:
+                        value: 0.5
+                        unit: kg
+                      dimension:
+                        width: 30
+                        height: 50
+                        depth: 50
+                        unit: cm
+                  items:
+                    - description: Most Adorable Sneakers
+                      quantity: 1
+                      price:
+                        amount: 80
+                        currency: USD
+                      weight:
+                        value: 1
+                        unit: kg
+                      sku: '10001'
+                    - description: Absolutely Lovely Hat
+                      quantity: 1
+                      price:
+                        amount: 20
+                        currency: USD
+                      cost:
+                        amount: 20
+                        currency: USD
+                      weight:
+                        value: 0.5
+                        unit: kg
+                      sku: '10001'
+                  customs:
+                    declared_value:
+                      amount: 100
+                      currency: USD
+                  pickup:
+                    contact_name: Warehouse Manager
+                    contact_phone: '043872701'
+                    contact_email: ops@test.com
+                    address1: Grand Central Warehouse
+                    city: Dubai
+                    state: Dubai
+                    postcode: ''
+                    country: AE
+                  dropoff:
+                    contact_name: Jo Bloggs
+                    contact_phone: '0561111234'
+                    contact_email: jo@test.com
+                    address1: '1, 10th Floor, Tower One'
+                    address2: Dubai Marina
+                    city: DUBAI
+                    what3words: ///daring.lion.race
+                    postcode: ''
+                    country: AE
+                  order_date: '2021-01-01T10:00:00.999+1:00'
+              Confirmed Shipment B2B:
+                value:
+                  entity_type: FORWARD
+                  merchant: MERCHANT-ID
+                  references:
+                    partner_order_reference: new-shipment-1
+                    partner_shipment_reference: new-shipment-1
+                  payment:
+                    payment_mode: PRE_PAID
+                    total_amount: 100
+                    currency: USD
+                  parcels:
+                    - partner_parcel_reference: parcel-123
+                      weight:
+                        value: 1
+                        unit: kg
+                      dimension:
+                        width: 20
+                        height: 40
+                        depth: 40
+                        unit: cm
+                    - partner_parcel_reference: parcel-124
+                      weight:
+                        value: 0.5
+                        unit: kg
+                      dimension:
+                        width: 30
+                        height: 50
+                        depth: 50
+                        unit: cm
+                  freight:
+                    packages:
+                      - package_reference: pallet-123
+                        type: pallet
+                        weight:
+                          value: 10
+                          unit: kg
+                        dimension:
+                          width: 30
+                          height: 50
+                          depth: 50
+                          unit: cm
+                      - package_reference: carton-12301
+                        type: carton
+                        weight:
+                          value: 3
+                          unit: kg
+                        dimension:
+                          width: 10
+                          height: 20
+                          depth: 20
+                          unit: cm
+                        parent: pallet-123
+                      - package_reference: carton-12302
+                        type: carton
+                        weight:
+                          value: 7
+                          unit: kg
+                        dimension:
+                          width: 10
+                          height: 20
+                          depth: 20
+                          unit: cm
+                        parent: pallet-123
+                  customs:
+                    declared_value:
+                      amount: 100
+                      currency: USD
+                  pickup:
+                    contact_name: Warehouse Manager
+                    contact_phone: '043872701'
+                    contact_email: ops@test.com
+                    address1: Grand Central Warehouse
+                    city: Dubai
+                    state: Dubai
+                    postcode: ''
+                    country: AE
+                  dropoff:
+                    contact_name: Jo Bloggs
+                    contact_phone: '0561111234'
+                    contact_email: jo@test.com
+                    address1: '1, 10th Floor, Tower One'
+                    address2: Dubai Marina
+                    city: DUBAI
+                    what3words: ///daring.lion.race
+                    postcode: ''
+                    country: AE
+                  order_date: '2021-01-01T10:00:00.999+1:00'
+              Draft Shipment - COD:
+                value:
+                  merchant: MERCHANT-ID
+                  entity_type: FORWARD
+                  references:
+                    partner_order_reference: new-draft-shipment-1
+                    partner_shipment_reference: new-draft-shipment-1
+                  payment:
+                    payment_mode: CASH_ON_DELIVERY
+                    pending_amount: 100
+                    total_amount: 100
+                    currency: USD
+                  items:
+                    - sku: S12345
+                      description: Carriyo T-Shirt
+                      quantity: 1
+                      price:
+                        amount: 100
+                        currency: USD
+                  dropoff:
+                    contact_name: My Customer
+                    contact_phone: '+971501100997'
+                    contact_email: mycustomer@gmail.com
+                    address1: 101 Dubai Maina
+                    city: DUBAI
+                    state: DUBAI
+                    country: AE
+                    coords:
+                      - 24.2495705
+                      - 55.6900005
+              Draft Shipment - Pre Paid:
+                value:
+                  merchant: MERCHANT-ID
+                  references:
+                    partner_order_reference: my_first_shipment_1
+                    partner_shipment_reference: my_first_shipment_1
+                  payment:
+                    payment_mode: PRE_PAID
+                    total_amount: 100
+                    currency: USD
+                  items:
+                    - sku: S12345
+                      description: Carriyo T-Shirt
+                      quantity: 1
+                      price:
+                        amount: 100
+                        currency: USD
+                  dropoff:
+                    contact_name: My Customer
+                    contact_phone: '+971501100997'
+                    contact_email: mycustomer@gmail.com
+                    address1: 101 Dubai Maina
+                    city: DUBAI
+                    state: DUBAI
+                    country: AE
+                    coords:
+                      - 24.2495705
+                      - 55.6900005
+        required: true
+        description: ''
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+              examples:
+                200 Error Response:
+                  value:
+                    shipment_id: KR22VUXEXGKX1
+                    merchant: MERCHANT-ID
+                    entity_type: FORWARD
+                    carrier_account: {}
+                    references:
+                      partner_order_reference: test-order-1
+                      partner_shipment_reference: test-order-1
+                    payment:
+                      payment_mode: PRE_PAID
+                      pending_amount: 0
+                      total_amount: 99
+                      currency: USD
+                    delivery:
+                      delivery_type: STANDARD
+                      scheduled_from: '2021-07-15T06:00:00.000Z'
+                      scheduled_to: '2021-07-15T10:00:00.000Z'
+                    parcels:
+                      - parcel_id: KR22VUXEXGKX1-1
+                        partner_parcel_reference: ''
+                        description: Parcel 1
+                        weight:
+                          value: 1
+                          unit: kg
+                        dimension:
+                          width: 10
+                          height: 10
+                          depth: 10
+                          unit: cm
+                    items:
+                      - sku: S12345
+                        description: Carriyo T-Shirt
+                        barcode: B12345
+                        image_link: 'https://mybusiness.com/images/sku1.png'
+                        origin_country: US
+                        quantity: 1
+                        price:
+                          amount: 99
+                          currency: USD
+                        cost:
+                          amount: 20
+                          currency: USD
+                        weight:
+                          value: 1
+                          unit: kg
+                        dangerous_goods: false
+                    customs:
+                      declared_value:
+                        amount: 100
+                        currency: USD
+                    pickup:
+                      partner_location_id: ACCOUNT_bef3862a-b27e-45d4-b077-8e8f4d674849
+                      contact_name: Customer Service
+                      contact_phone: '+971561234567'
+                      contact_email: crm@mybusiness.com
+                      address1: DIP Delivery Warehouse
+                      area: DUBAI-INVESTMENT-PARK-1
+                      city: DUBAI
+                      state: DUBAI
+                      country: AE
+                      coords:
+                        - 29.373420706419914
+                        - 47.97881566875099
+                    dropoff:
+                      contact_name: Jo Bloggs
+                      contact_phone: '+971561234567'
+                      contact_email: jo.bloggs@gmail.com
+                      address1: 1 Financial Centre Road
+                      address2: 'Downtown Views, Apartment 101'
+                      area: DOWNTOWN-DUBAI
+                      city: DUBAI
+                      state: DUBAI
+                      country: AE
+                      coords:
+                        - 29.294045
+                        - 48.087608
+                    post_shipping_info:
+                      status: error
+                      key_milestones: {}
+                      error_details:
+                        - level: ERROR
+                          trigger: BOOKING
+                          source: CARRIYO
+                          type: VALIDATION
+                          message: >-
+                            No carrier assigned. Please provide valid carrier and reprocess
+                            booking again.
+                          code: no_carrier_assigned
+                          field: carrier
+                        - level: WARNING
+                          trigger: BOOKING
+                          source: CARRIYO
+                          type: VALIDATION
+                          message: Contact Email is missing.
+                          code: email_missing
+                          field: dropoff.contact_email
+                    creation_date: '2021-07-13T13:16:23.016Z'
+                    confirmation_date: '2021-07-13T13:16:23.149Z'
+                    update_date: '2021-08-10T17:31:20.218Z'
+                    order_date: '2021-07-13T11:42:12.889Z'
+                    language: en
+                200 Pending Response:
+                  value:
+                    shipment_id: KR22VUXEXGKX1
+                    merchant: MERCHANT-ID
+                    entity_type: FORWARD
+                    carrier_account:
+                      carrier: ARAMEX
+                      carrier_id: c1053e4b-f2e7-4cee-917f-a390e73887a6
+                      carrier_account_name: ARAMEX UAE
+                    references:
+                      partner_order_reference: test-order-1
+                      partner_shipment_reference: test-order-1
+                    payment:
+                      payment_mode: PRE_PAID
+                      pending_amount: 0
+                      total_amount: 99
+                      currency: USD
+                    delivery:
+                      delivery_type: STANDARD
+                      scheduled_from: '2021-07-15T06:00:00.000Z'
+                      scheduled_to: '2021-07-15T10:00:00.000Z'
+                    parcels:
+                      - parcel_id: KR22VUXEXGKX1-1
+                        partner_parcel_reference: ''
+                        description: Parcel 1
+                        weight:
+                          value: 1
+                          unit: kg
+                        dimension:
+                          width: 10
+                          height: 10
+                          depth: 10
+                          unit: cm
+                    items:
+                      - sku: S12345
+                        description: Carriyo T-Shirt
+                        barcode: B12345
+                        image_link: 'https://mybusiness.com/images/sku1.png'
+                        origin_country: US
+                        quantity: 1
+                        price:
+                          amount: 99
+                          currency: USD
+                        cost:
+                          amount: 20
+                          currency: USD
+                        weight:
+                          value: 1
+                          unit: kg
+                        dangerous_goods: false
+                    pickup:
+                      partner_location_id: ACCOUNT_bef3862a-b27e-45d4-b077-8e8f4d674849
+                      contact_name: Customer Service
+                      contact_phone: '+971561234567'
+                      contact_email: crm@mybusiness.com
+                      address1: DIP Delivery Warehouse
+                      area: DUBAI-INVESTMENT-PARK-1
+                      city: DUBAI
+                      state: DUBAI
+                      country: AE
+                      coords:
+                        - 29.373420706419914
+                        - 47.97881566875099
+                    dropoff:
+                      contact_name: Jo Bloggs
+                      contact_phone: '+971561234567'
+                      contact_email: jo.bloggs@gmail.com
+                      address1: 1 Financial Centre Road
+                      address2: 'Downtown Views, Apartment 101'
+                      area: DOWNTOWN-DUBAI
+                      city: DUBAI
+                      state: DUBAI
+                      country: AE
+                      coords:
+                        - 29.294045
+                        - 48.087608
+                    post_shipping_info:
+                      status: pending
+                      key_milestones: {}
+                    creation_date: '2021-07-13T13:16:23.016Z'
+                    confirmation_date: '2021-07-13T13:16:23.149Z'
+                    update_date: '2021-08-10T17:31:20.218Z'
+                    order_date: '2021-07-13T11:42:12.889Z'
+                    language: en
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/create-shipment-error-response'
+              examples:
+                400 Error Response:
+                  value:
+                    status: '400'
+                    timestamp: '2021-08-10T17:34:22.906Z'
+                    errors:
+                      - Duplicate partner shipment reference
+      security:
+        - OAuth2: []
+      x-codegen-request-body-name: body
+  '/shipments/{shipment_id}':
+    get:
+      tags:
+        - shipments
+      summary: Get Shipment
+      description: |-
+        This endpoint returns the latest shipment object including the most up-to-date status information.
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+      operationId: get-shipment
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/create-shipment-error-response'
+              examples:
+                '404':
+                  value:
+                    status: '404'
+                    timestamp: '2020-12-07T13:50:11.853Z'
+                    errors:
+                      - 'No shipment found with the shipment id: KHNI57EYOAICSdf'
+      security:
+        - OAuth2: []
+    put:
+      tags:
+        - shipments
+      summary: Update Shipment
+      description: |-
+        This endpoint is used to update a draft shipment. If a shipment is already confirmed, then the endpoint will return a 400 error.
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+      operationId: update-shipment
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          required: true
+          schema:
+            type: string
+            default: application/json
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/shipment-draft-request'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  status:
+                    type: string
+                    minLength: 1
+                  timestamp:
+                    type: string
+                    minLength: 1
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - status
+                  - timestamp
+                  - errors
+                x-examples:
+                  example-1:
+                    status: '400'
+                    timestamp: '2022-04-07T13:37:09.855Z'
+                    errors:
+                      - 'Shipment L1OJMRKJEPTNB is not [draft, error].'
+              examples:
+                update-failed:
+                  value:
+                    status: '400'
+                    timestamp: '2022-04-07T13:37:09.855Z'
+                    errors:
+                      - 'Shipment L1OJMRKJEPTNB is not [draft, error].'
+      security:
+        - OAuth2: []
+      x-codegen-request-body-name: body
+    patch:
+      tags:
+        - shipments
+      summary: Update Shipment
+      description: |-
+        This endpoint is used to update a draft shipment. If a shipment is already confirmed, then the endpoint will return a 400 error.
+
+        1. This endpoint supports partial updates. You can partially update certain sections of the shipment without updating the rest of the shipment.
+        2. Partial updates are applied to top level shipment attributes. For example, if you pass the pickup element in the request, then all the pickup fields in the object will be replaced with the new payload.
+        3. The above rule does not apply to custom attributes. Custom attributes can be individually added, updated or removed. To remove a custom attribute, you may pass a null value.
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+      operationId: update-shipment-patch
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          required: true
+          schema:
+            type: string
+            default: application/json
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/shipment-draft-request'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  status:
+                    type: string
+                    minLength: 1
+                  timestamp:
+                    type: string
+                    minLength: 1
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - status
+                  - timestamp
+                  - errors
+                x-examples:
+                  example-1:
+                    status: '400'
+                    timestamp: '2022-04-07T13:37:09.855Z'
+                    errors:
+                      - 'Shipment L1OJMRKJEPTNB is not [draft, error].'
+              examples:
+                update-failed:
+                  value:
+                    status: '400'
+                    timestamp: '2022-04-07T13:37:09.855Z'
+                    errors:
+                      - 'Shipment L1OJMRKJEPTNB is not [draft, error].'
+      security:
+        - OAuth2: []
+      x-codegen-request-body-name: body
+  '/shipments/{shipment_id}/confirm':
+    post:
+      tags:
+        - shipments
+      summary: Confirm Shipment
+      description: |-
+        This endpoint is intended to confirm a `draft` shipment.
+
+        **Please Note: The request body is optional when you use this endpoint. You can optionally update the shipment data when confirming the shipment.**
+        1. This endpoint supports partial updates. You can partially update certain sections of the shipment without updating the rest of the shipment.
+        2. Partial updates are applied to top level shipment attributes. For example, if you pass the pickup element in the request, then all the pickup fields in the object will be replaced with the new payload.
+        3. The above rule does not apply to custom attributes. Custom attributes can be individually added, updated or removed. To remove a custom attribute, you may pass a null value.
+
+        Once the shipment is confirmed, the shipment is set to pending status, a carrier is assigned, and a booking request is sent to the assigned carrier. The endpoint returns the shipment  immediately in the pending status, without waiting for a response from the carrier.
+
+        If the carrier successfully confirms the booking, the shipment status is updated to booked, along with the tracking number. If the carrier rejects the booking request, the shipment status is set to error.
+
+        The merchant is notified of the booking update and the subsequent label generation  via webhooks.
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+      operationId: confirm-shipment
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          required: true
+          schema:
+            type: string
+            default: application/json
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/shipment-patch-request'
+        required: false
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  status:
+                    type: string
+                    minLength: 1
+                  timestamp:
+                    type: string
+                    minLength: 1
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - status
+                  - timestamp
+                  - errors
+                x-examples:
+                  example-1:
+                    status: '400'
+                    timestamp: '2022-04-07T13:30:14.500Z'
+                    errors:
+                      - 'Only draft shipments can be confirmed. Current shipment status: booked.'
+              examples:
+                confirmation-failed:
+                  value:
+                    status: '400'
+                    timestamp: '2022-04-07T13:30:14.500Z'
+                    errors:
+                      - 'Only draft shipments can be confirmed. Current shipment status: booked.'
+      security:
+        - OAuth2: []
+      x-codegen-request-body-name: body
+  '/shipments/{shipment_id}/cancel':
+    post:
+      tags:
+        - shipments
+      summary: Cancel Shipment
+      description: |-
+        This endpoint is used to cancel a shipment that has not yet been shipped.
+
+        **Please Note: The request body is optional when you use this endpoint. You can optionally provide a reason code when cancelling a shipment.**
+
+        The endpoint also cancels the shipment booking with the carrier if the carrier supports it. Please note that cancellation is only supported if the shipment is not yet shipped. If a shipment is already shipped, then the endpoint will return a 400 error.
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+      operationId: cancel-shipment
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                update_reason_code:
+                  type: string
+                  description: |-
+                    Any one of the standard reason codes (below) or custom reason codes defined by the merchant.
+
+                    [Click here for the list of Standard Reason Codes](/guides/shipment-reason-codes/)
+        required: false
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  timestamp:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                x-examples:
+                  example-1:
+                    status: error
+                    timestamp: '2022-03-22T09:29:01.889Z'
+                    errors:
+                      - "Status change is not allowed from current status: 'shipped' to the new status: 'cancelled'"
+              examples:
+                cancellation-failed:
+                  value:
+                    status: error
+                    timestamp: '2022-03-22T09:29:01.889Z'
+                    errors:
+                      - "Status change is not allowed from current status: 'shipped' to the new status: 'cancelled'"
+      security:
+        - OAuth2: []
+      x-codegen-request-body-name: body
+  '/shipments/{shipment_id}/label/refresh':
+    post:
+      tags:
+        - shipments
+      summary: Refresh Label
+      description: |-
+        This endpoint refreshes the default label for the given shipment id if the label is missing.
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+      operationId: refresh-label
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  awb:
+                    type: string
+      security:
+        - OAuth2: []
+  '/shipments/{shipment_id}/reassign':
+    post:
+      tags:
+        - shipments
+      summary: Reassign Shipment
+      description: |-
+        This endpoint reassigns any unshipped shipments to a different carrier or can be used to simply reprocess any shipments that are in an "error" state.
+
+        **Please Note: The request body is optional when you use this endpoint.**
+
+        If no carrier account is provided, then the shipment is reprocessed with the existing carrier account assigned to the shipment, or automatically asssigned to a carrier account as per the routing rules.
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+
+        * To retry the shipment, original carrier account object should be specified in request.
+        * To reassign the shipment, target carrier account should be specified in the request.
+        * If no carrier account object specified, the rules engine will trigger to find the best suitable one.
+        * Otherwise, operation has no effect.
+      operationId: reassign-shipment
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          required: true
+          schema:
+            type: string
+            default: application/json
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                carrier_account:
+                  $ref: '#/components/schemas/carrier-account-request'
+        required: false
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+      security:
+        - OAuth2: []
+      x-codegen-request-body-name: body
+  '/shipments/{shipment_id}/reprocess':
+    post:
+      tags:
+        - shipments
+      summary: Reprocess Shipment
+      description: |-
+        This endpoint is used to reprocess shipments that are in the `error` status due to failure during booking. It can also be used to reprocess shipments that have been `cancelled` or `returned`. The entire shipment object is required to be passed in the request to reprocess a shipment.
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+      operationId: reprocess-shipment
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          required: true
+          schema:
+            type: string
+            default: application/json
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/shipment-patch-request'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+      x-codegen-request-body-name: body
+  '/shipments/{shipment_id}/ready-to-ship':
+    post:
+      tags:
+        - shipments
+      summary: Ready to Ship
+      description: |-
+        This endpoint sets the shipment as ready-to-ship, and for carriers that support scheduling of collection, it notifies them of the scheduled date and time of collection.
+
+        **Please Note: The request body is optional when you use this endpoint. You can optionally update the parcel information when setting the shipment as ready-to-ship.**
+
+        This process is particularly useful for on-demand carrier service where the carrier only picks up the shipment once they are notified of the collection schedule.
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+      operationId: ready-to-ship
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/update-parcels-request'
+        required: false
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+      security:
+        - OAuth2: []
+      x-codegen-request-body-name: body
+  '/shipments/{shipment_id}/update-status':
+    post:
+      tags:
+        - shipments
+      summary: Update Status
+      description: |-
+        This status endpoint allows the merchant to update the status of the shipment. This is useful in following scenarios:
+
+        1. To set the merchant controlled status such as "shipped", "delivery_confirmed", and "return_confirmed"
+        2. To overide incorrect status received from the carrier. For instance, the carrier incorrectly updated the status as "delivered", the merchant can overide the status to "returned" if the shipment was returned to the merchant
+        3. To manually update missing status. For instance, if the merchant is aware that the carrier delivered the shipment but failed to update the system, then the merchant can mannually set the status to "delviered" using this endpoint.
+
+        Please note, that only the following status updates are allowed via this end point
+
+        1. `shipped`, if the current status is one of the following
+        * booked
+        * ready_to_ship
+        * failed_collection_attempt
+        2. `out_for_delivery`, if the current status is one of the following
+        * shipped
+        * in_transit
+        * failed_delivery_attempt
+        * suspended
+        * missing
+        3. `delivered`, if the current status is one of the following
+        * cancelled
+        * shipped
+        * in_transit
+        * out_for_delivery
+        * awaiting_customer_collection
+        * failed_delivery_attempt
+        * suspended
+        * missing
+        * delayed
+        * returned
+        * delivery_confirmed
+        4. `delivery_confirmed`, if the current status is one of the following
+        * delivered
+        5. `return_in_transit`, if the current status is one of the following
+        * shipped
+        * in_transit
+        * out_for_delivery
+        * awaiting_customer_collection
+        * failed_delivery_attempt
+        * ready_for_return
+        * suspended
+        * missing
+        * delayed
+        6. `returned`, if the current status is one of the following
+        * cancelled
+        * shipped
+        * in_transit
+        * out_for_delivery
+        * awaiting_customer_collection
+        * failed_delivery_attempt
+        * ready_for_return
+        * return_in_transit
+        * suspended
+        * missing
+        * delayed
+        * delivered
+        * return_confirmed
+        7. `return_confirmed`, if the current status is one of the following
+        * returned
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+      operationId: update-status
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_status:
+                  type: string
+                update_date:
+                  type: string
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  timestamp:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                x-examples:
+                  example-1:
+                    status: error
+                    timestamp: '2022-05-11T17:39:16.126Z'
+                    errors:
+                      - "Status change is not allowed from current status: 'delivered' to the new status: 'delivered'"
+              examples:
+                status-update-failed:
+                  value:
+                    status: error
+                    timestamp: '2022-05-11T17:39:16.126Z'
+                    errors:
+                      - "Status change is not allowed from current status: 'delivered' to the new status: 'delivered'"
+      x-codegen-request-body-name: body
+  '/shipments/bulk/status':
+    get:
+      tags:
+        - shipments
+      summary: Get Bulk Status
+      description: This endpoint is designed to provide user with the statuses of requested shipments. Parameter `shipment_id` can be specified multiple times. The result of this operation is the list of shipments' current statuses and all milestones.
+      operationId: get-bulk-status
+      parameters:
+        - name: shipment_id
+          in: query
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/bulk-shipment-status-response'
+      security:
+        - OAuth2: []
+  '/shipments/{shipment_id}/parcels':
+    put:
+      tags:
+        - shipments
+      summary: Update Parcels
+      description: |-
+        This endpoint allows the tenant to update the parcel information after the initial shipment is created.
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+      operationId: update-parcels
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          required: true
+          schema:
+            type: string
+            default: application/json
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/update-parcels-request'
+        required: false
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+      security:
+        - OAuth2: []
+      x-codegen-request-body-name: body
+  '/shipments/{shipment_id}/update-delivery-promise':
+    post:
+      summary: Update Delivery Promise
+      tags:
+        - shipments
+      operationId: update-delivery-promise
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          required: true
+          schema:
+            type: string
+            default: application/json
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+      description: |-
+        This endpoint allows the merchant to update the promised delivery date after the shipment is created. The promised delivery date can be updated as long as the shipment is not in a final status (delivered, returned or cancelled)
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+      security:
+        - OAuth2: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/promised-delivery-date-request'
+        required: true
+  '/shipments/{shipment_id}/update-delivery-schedule':
+    post:
+      summary: Update Delivery Schedule
+      tags:
+        - shipments
+      operationId: update-delivery-schedule
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          required: true
+          schema:
+            type: string
+            default: application/json
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+      description: |-
+        This endpoint allows the merchant to update the scheduled delivery date after the shipment is created.
+
+        The delivery schedule can be updated as long as the shipment is not in a final status (delivered, returned or cancelled), however please note that this information is not passed to the carriers after the shipment is booked, as most carriers do not accept a schedule update after booking.
+
+        It can be set using one of the following options
+
+        Option 1: Provide the `scheduled_from` and `scheduled_to` to choose the scheduled date along with start and end time.
+
+        Example:
+        "delivery": {
+          "scheduled_from": "2022-01-01'T'10:00:00.000Z",
+          "scheduled_to": "2022-01-01'T'12:00:00.000Z"
+        }
+
+        Option 2: Provide the `scheduled_date` only to choose the entire day.
+
+        Example:
+        "delivery": {
+          "scheduled_date": "2022-01-01"
+        }
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+      security:
+        - OAuth2: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/collection-request'
+            examples:
+              Delivery Slot:
+                value:
+                  scheduled_from: '2022-01-01T10:00:00.000Z'
+                  scheduled_to: '2022-01-01T12:00:00.000Z'
+              Delivery Day:
+                value:
+                  scheduled_date: '2022-01-01'
+        required: true
+    parameters:
+      - schema:
+          type: string
+        name: shipment_id
+        in: path
+        required: true
+  '/shipments/{shipment_id}/update-collection-schedule':
+    post:
+      summary: Update Collection Schedule
+      tags:
+        - shipments
+      operationId: update-collection-schedule
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          required: true
+          schema:
+            type: string
+            default: application/json
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+      description: |-
+        This endpoint allows the merchant to update the scheduled collection date after the shipment is created.
+
+        The collection schedule can be updated as long as the shipment is not in a final status (delivered, returned or cancelled), however please note that this information is not passed to the carriers after the shipment is booked, as most carriers do not accept a schedule update after booking.
+
+        It can be set using one of the following options
+
+        Option 1: Provide the `scheduled_from` and `scheduled_to` to choose the scheduled date along with start and end time.
+
+        Example:
+        "collection": {
+          "scheduled_from": "2022-01-01'T'10:00:00.000Z",
+          "scheduled_to": "2022-01-01'T'12:00:00.000Z"
+        }
+
+        Option 2: Provide the `scheduled_date` only to choose the entire day.
+
+        Example:
+        "collection": {
+          "scheduled_date": "2022-01-01"
+        }
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+      security:
+        - OAuth2: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/collection-request'
+            examples:
+              Collection Slot:
+                value:
+                  scheduled_from: '2022-01-01T10:00:00.000Z'
+                  scheduled_to: '2022-01-01T12:00:00.000Z'
+              Collection Day:
+                value:
+                  scheduled_date: '2022-01-01'
+        required: true
+    parameters:
+      - schema:
+          type: string
+        name: shipment_id
+        in: path
+        required: true
+  '/shipments/{shipment_id}/estimate-shipping-cost':
+    post:
+      summary: Estimate Shipping Cost for a shipment
+      tags:
+        - shipments
+      operationId: estimate-shipping-cost-for-shipment
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+      description: |-
+        This endpoint allows the merchant to estimate shipment's cost for a draft shipment before booking the shipment.
+
+        The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
+      security:
+        - OAuth2: []
+    parameters:
+      - schema:
+          type: string
+        name: shipment_id
+        in: path
+        required: true
+  '/checkout/shipping-rates':
+    post:
+      summary: Get Shipping Rates
+      tags:
+        - checkout
+      operationId: get-shipping-rates
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/shipping-rates-request'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipping-rates-response'
+      description: |-
+        This endpoint allows the merchant to get shipping rates for a future shipment.
+      security:
+        - OAuth2: []
+  '/carrier-accounts':
+    get:
+      tags:
+        - carrier-accounts
+      summary: List Carrier Accounts
+      operationId: list-carrier-accounts
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - active
+              - inactive
+              - deleted
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/carrier-account-endpoint-object'
+      security:
+        - OAuth2: []
+      description: |-
+        The carrier list endpoint returns a list of carrier-accounts that you have setup in your Carriyo account. A carrier account can be `inactive` if it is not in use.
+
+        By default, the endpoint returns all active and inactive carrier accounts. The `status` query parameter can be passed to return carrier accounts based on the status. You can pass the following values to the `status` parameter.
+        - active
+        - inactive
+        - deleted
+
+        **Inactive carrier accounts cannot be used for booking. Hence you may want to only fetch active carrier accounts by passing query parameter of `status=active`.**
+    post:
+      tags:
+        - carrier-accounts
+      summary: Create Carrier Account
+      operationId: create-carrier-account
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/carrier-account-endpoint-request'
+        required: false
+      responses:
+        '201':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/carrier-account-endpoint-object'
+      security:
+        - OAuth2: []
+      x-codegen-request-body-name: body
+    parameters: []
+  '/carrier-accounts/{carrier-account-id}':
+    get:
+      tags:
+        - carrier-accounts
+      summary: Get Carrier Account
+      operationId: get-carrier-account
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: carrier-account-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/carrier-account-endpoint-object'
+      security:
+        - OAuth2: []
+    put:
+      tags:
+        - carrier-accounts
+      summary: Update Carrier Account
+      operationId: update-carrier-account
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: carrier-account-id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/carrier-account-endpoint-request'
+        required: false
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/carrier-account-endpoint-object'
+      security:
+        - OAuth2: []
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+        - carrier-accounts
+      summary: Delete Carrier Account
+      operationId: delete-carrier-account
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: carrier-account-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/carrier-account-endpoint-object'
+      security:
+        - OAuth2: []
+    parameters:
+      - schema:
+          type: string
+        name: carrier-account-id
+        in: path
+        required: true
+  '/manifests':
+    get:
+      tags:
+        - manifests
+      summary: List Manifests
+      operationId: list-manifests
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/manifest-response'
+      security:
+        - OAuth2: []
+    post:
+      tags:
+        - manifests
+      summary: Create Manifest
+      operationId: create-manifest
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/manifest-request'
+        required: false
+      responses:
+        '201':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/manifest-response'
+      security:
+        - OAuth2: []
+      x-codegen-request-body-name: body
+  '/manifests/{manifest-id}':
+    get:
+      tags:
+        - manifests
+      summary: Get Manifest
+      operationId: get-manifest
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: manifest-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/manifest-response'
+      security:
+        - OAuth2: []
+    delete:
+      tags:
+        - manifests
+      summary: Delete Manifest
+      operationId: delete-manifest
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: manifest-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/manifest-response'
+      security:
+        - OAuth2: []
+  '/manifests/{manifest-id}/cancel':
+    patch:
+      tags:
+        - manifests
+      summary: Cancel Manifest
+      operationId: cancel-manifest
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: manifest-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                type: object
+      security:
+        - OAuth2: []
+  '/manifests/{manifest-id}/retry':
+    patch:
+      tags:
+        - manifests
+      summary: Retry Manifest
+      operationId: retry-manifest
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: manifest-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                type: object
+      security:
+        - OAuth2: []
+  '/manifests/{manifest-id}/ship':
+    patch:
+      tags:
+        - manifests
+      summary: Ship Manifest
+      operationId: ship-manifest
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: manifest-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                type: object
+      security:
+        - OAuth2: []
+  '/attributes':
+    get:
+      tags:
+        - attributes
+      summary: List Attrbutes
+      operationId: list-attrbutes
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/attribute-response'
+      security:
+        - OAuth2: []
+    post:
+      tags:
+        - attributes
+      summary: Create Attribute
+      operationId: create-attribute
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/attribute-request'
+        required: false
+      responses:
+        '201':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/attribute-response'
+      security:
+        - OAuth2: []
+      x-codegen-request-body-name: body
+  '/attributes/{attribute-id}':
+    get:
+      tags:
+        - attributes
+      summary: Get Attribute
+      operationId: get-attribute
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: attribute-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/attribute-response'
+      security:
+        - OAuth2: []
+      description: ''
+    put:
+      tags:
+        - attributes
+      summary: Update Attribute
+      operationId: update-attribute
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: attribute-id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/attribute-request'
+        required: false
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/attribute-response'
+      security:
+        - OAuth2: []
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+        - attributes
+      summary: Delete Attribute
+      operationId: delete-attribute
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: attribute-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/attribute-response'
+      security:
+        - OAuth2: []
+  '/automation-rulesets':
+    post:
+      tags:
+        - automation-rules
+      summary: Create Automation Ruleset
+      description: |-
+        This endpoint creates a new automation ruleset with an optional set of rules.
+      operationId: create-automation-ruleset-and-rules
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/automation-ruleset-with-rules-request'
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/automation-ruleset-with-rules-response'
+      security:
+        - OAuth2: []
+    get:
+      tags:
+        - automation-rules
+      summary: List Automation Rulesets
+      description: |-
+        This endpoint lists automation rulesets for one or more or all merchants. If no merchant parameter is passed, the endpoint returns all rulesets.
+      operationId: list-automation-rulesets
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: merchant
+          description: merchant id
+          in: query
+          schema:
+            type: string
+        - name: entity-type
+          description: Shipment entity type FORWARD or REVERSE
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ruleset-response'
+  '/automation-rulesets/{automation-ruleset-id}':
+    get:
+      tags:
+        - automation-rules
+      summary: Get Automation Ruleset
+      description: |-
+        This endpoint returns the automation ruleset
+      operationId: get-automation-ruleset
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: automation-ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ruleset-response'
+    put:
+      tags:
+        - automation-rules
+      summary: Update Automation Ruleset
+      description: |-
+        This endpoint updates the automation ruleset including the rules it contains.
+      operationId: update-automation-ruleset-and-rules
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: automation-ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/automation-ruleset-with-rules-request'
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/automation-ruleset-with-rules-response'
+    patch:
+      tags:
+        - automation-rules
+      summary: Update Automation Ruleset
+      description: |-
+        This endpoint updates the automation ruleset without updating the rules.
+      operationId: patch-automation-ruleset
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: automation-ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ruleset-request'
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ruleset-response'
+    delete:
+      tags:
+        - automation-rules
+      summary: Delete Automation Ruleset
+      description: |-
+        This endpoint deletes the automation ruleset including the rules it contains.
+      operationId: delete-automation-ruleset
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: automation-ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                type: object
+  '/automation-rulesets/{automation-ruleset-id}/rules':
+    post:
+      tags:
+        - automation-rules
+      summary: Create Automation Rule
+      description: |-
+        This endpoint adds a new automation rule to the ruleset.
+      operationId: create-automation-rules
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: automation-ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/automation-rule-request'
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/automation-rule-response'
+      security:
+        - OAuth2: []
+    get:
+      tags:
+        - automation-rules
+      summary: List automation rules
+      description: |-
+        This endpoint lists all the automation rules within the ruleset.
+      operationId: list-automation-rules
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: automation-ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/automation-rule-response'
+      security:
+        - OAuth2: []
+  '/automation-rulesets/{ruleset-id}/rules/{automation-rule-id}':
+    get:
+      tags:
+        - automation-rules
+      summary: Get Automation Rule
+      description: |-
+        This endpoint returns the automation rule.
+      operationId: get-automation-rule
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: automation-rule-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/automation-rule-response'
+      security:
+        - OAuth2: []
+    delete:
+      tags:
+        - automation-rules
+      summary: Delete Automation Rule
+      description: |-
+        This endpoint deletes the automation rule.
+      operationId: delete-automation-rule
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: automation-rule-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                type: object
+      security:
+        - OAuth2: []
+    put:
+      tags:
+        - automation-rules
+      summary: Update Automation Rule
+      description: |-
+        This endpoint updates the automation rule.
+      operationId: update-automation-rule
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: automation-rule-id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/automation-rule-request'
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/automation-rule-response'
+      security:
+        - OAuth2: []
+  '/automation-rulesets/{ruleset-id}/rules/sequences':
+    patch:
+      tags:
+        - automation-rules
+      summary: Update Automation Sequence
+      description: |-
+        This endpoint updates the sequence or priority of rules in the ruleset.
+      operationId: update-automation-rules-sequence
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/sequences-request'
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/sequences-request'
+      security:
+        - OAuth2: []
+  '/service-level-rulesets':
+    post:
+      tags:
+        - service-levels
+      summary: Create Service Level Ruleset
+      description: |-
+        This endpoint creates a new service level ruleset with an optional set of rules.
+      operationId: create-service-level-ruleset-and-rules
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/service-level-ruleset-with-rules-request'
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/service-level-ruleset-with-rules-response'
+      security:
+        - OAuth2: []
+    get:
+      tags:
+        - service-levels
+      summary: List Service Level Rulesets
+      operationId: list-service-level-rulesets
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: merchant
+          description: merchant id
+          in: query
+          schema:
+            type: string
+        - name: entity-type
+          description: Shipment entity type FORWARD or REVERSE
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ruleset-response'
+  '/service-level-rulesets/{service-level-ruleset-id}':
+    get:
+      tags:
+        - service-levels
+      summary: Get Service Level Ruleset
+      description: |-
+        This endpoint returns the service level ruleset
+      operationId: get-service-level-ruleset
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: service-level-ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ruleset-response'
+    put:
+      tags:
+        - service-levels
+      summary: Update Service Level Ruleset
+      description: |-
+        This endpoint updates the service level ruleset including the rules it contains.
+      operationId: update-service-level-ruleset-and-rules
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: service-level-ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/service-level-ruleset-with-rules-request'
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/service-level-ruleset-with-rules-response'
+    patch:
+      tags:
+        - service-levels
+      summary: Update Service Level Ruleset
+      description: |-
+        This endpoint updates the service level ruleset without updating the rules.
+      operationId: patch-service-level-ruleset
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: service-level-ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ruleset-request'
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ruleset-response'
+    delete:
+      tags:
+        - service-levels
+      summary: Delete Service Level Ruleset
+      description: |-
+        This endpoint deletes the service level ruleset including the rules it contains.
+      operationId: delete-service-level-ruleset
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: service-level-ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                type: object
+  '/service-level-rulesets/{service-level-ruleset-id}/rules':
+    post:
+      tags:
+        - service-levels
+      summary: Create Service Level Rule
+      description: |-
+        This endpoint adds a new service level rule to the ruleset.
+      operationId: create-service-level-rules
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: service-level-ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/service-level-rule-request'
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/service-level-rule-response'
+      security:
+        - OAuth2: []
+    get:
+      tags:
+        - service-levels
+      summary: List Service Level Rules
+      description: |-
+        This endpoint lists all the service level rules within the ruleset.
+      operationId: list-service-level-rules
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: service-level-ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/service-level-rule-response'
+      security:
+        - OAuth2: []
+  '/service-level-rulesets/{ruleset-id}/rules/{service-level-rule-id}':
+    get:
+      tags:
+        - serice-level-rules
+      summary: Get Service Level Rule
+      description: |-
+        This endpoint returns the service level rule.
+      operationId: get-service-level-rule
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service-level-rule-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/service-level-rule-response'
+      security:
+        - OAuth2: []
+    delete:
+      tags:
+        - service-levels
+      summary: Delete Service Level Rule
+      description: |-
+        This endpoint deletes the service level rule.
+      operationId: delete-service-level-rule
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service-level-rule-id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                type: object
+      security:
+        - OAuth2: []
+    put:
+      tags:
+        - service-levels
+      summary: Update Service Level Rule
+      description: |-
+        This endpoint updates the service level rule.
+      operationId: update-service-level-rule
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: service-level-rule-id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/service-level-rule-request'
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/service-level-rule-response'
+      security:
+        - OAuth2: []
+  '/service-level-rulesets/{ruleset-id}/rules/sequences':
+    patch:
+      tags:
+        - service-levels
+      summary: Update Service Level Sequence
+      description: |-
+        This endpoint updates the sequence or priority of rules in the ruleset.
+      operationId: update-service-level-rules-sequence
+      parameters:
+        - name: x-api-key
+          in: header
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+            default: application/json
+        - name: ruleset-id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/sequences-request'
+      responses:
+        '200':
+          description: ''
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/sequences-request'
+      security:
+        - OAuth2: []
+components:
+  schemas:
+    attribute-request:
+      title: Attribute Request
+      required:
+        - allowed_values
+        - attribute_name
+        - attribute_type
+      type: object
+      properties:
+        attribute_name:
+          type: string
+        allowed_values:
+          type: array
+          items:
+            type: string
+        attribute_type:
+          type: string
+          enum:
+            - STRING
+            - NUMBER
+            - ENUM
+            - BOOLEAN
+            - MAP
+        attribute_entity_type:
+          type: string
+          enum:
+            - SHIPMENT
+            - ADDRESS
+            - PRODUCT
+        merchants:
+          type: array
+          items:
+            type: string
+    attribute-response:
+      title: Attribute Response
+      required:
+        - allowed_values
+        - attribute_name
+        - attribute_type
+      type: object
+      properties:
+        custom_attribute_id:
+          type: string
+        attribute_name:
+          type: string
+        allowed_values:
+          type: array
+          items:
+            type: string
+        attribute_type:
+          type: string
+          enum:
+            - STRING
+            - NUMBER
+            - ENUM
+            - BOOLEAN
+            - MAP
+        attribute_entity_type:
+          type: string
+          enum:
+            - SHIPMENT
+            - ADDRESS
+            - PRODUCT
+        merchants:
+          type: array
+          items:
+            type: string
+    bulk-shipment-status-response:
+      title: Bulk Shipment Status Response
+      type: object
+      properties:
+        shipmentId:
+          type: string
+        status:
+          $ref: '#/components/schemas/carriyo-response-status'
+        milestones:
+          type: array
+          description: The list of all shipment statuses
+          items:
+            type: object
+            properties:
+              status:
+                $ref: '#/components/schemas/carriyo-response-status'
+              date:
+                type: string
+    carrier-account-request:
+      title: Carrier Account Request
+      type: object
+      description: Carrier account chosen for the shipment. Should contain either the carrier account id or carrier account name. Carrier account id takes precedence if both fields are passed.
+      properties:
+        carrier_id:
+          type: string
+          description: The ID of the carrier account assigned to the shipment
+        carrier_account_name:
+          type: string
+          description: The name of the carrier account assigned to the shipment
+    carrier-account-object:
+      title: Carrier Account Object
+      type: object
+      description: Carrier account chosen for the shipment.
+      properties:
+        carrier:
+          type: string
+          description: The actual carrier based on the carrier account assigned to the shipment
+          example: DHL
+        carrier_account_name:
+          type: string
+          description: The name of the carrier account assigned to the shipment
+          example: My DHL Account
+        carrier_id:
+          type: string
+          description: The id of the carrier account assigned to the shipment
+          example: act_1261YQIU2eTuokipwqbNBV
+    carrier-account-endpoint-request:
+      type: object
+      x-examples:
+        example-1:
+          carrier_account_id: da335c3b-0f99-4558-b54a-851zx3b86975
+          carrier_account_name: QUIQUP SAME DAY
+          carrier: QUIQUP
+          daily_capacity_id: 9a4bc256-7884-46c3-aa7f-bded930cca74
+          costing_profile_id: 69f19360-12b0-4f4b-9b44-79653e2155c1
+          network_id: cd7b4dda-7250-4183-90dc-59344a095b14
+          property:
+            CLIENT_ID: client_id_value
+            CLIENT_SECRET: client_secret_value
+            BILLING_IDENTIFIER: billing_identifier_value
+            ORDER_TYPE: partner_same_day
+            BILLING_IDENTIFIER_MAPPING: '{}'
+            URL: 'https://api.staging.quiqup.com/'
+          label:
+            default_label: carrier_pdf
+          auto_ready_to_ship: true
+          auto_return_confirmed: false
+          auto_translate_to_english: true
+      properties:
+        carrier_account_id:
+          type: string
+        carrier_account_name:
+          type: string
+        carrier:
+          type: string
+        daily_capacity_id:
+          type: string
+        in_flight_capacity_id:
+          type: string
+        costing_profile_id:
+          type: string
+        network_id:
+          type: string
+        property:
+          type: object
+        label:
+          type: object
+          properties:
+            default_label:
+              type: string
+        auto_ready_to_ship:
+          type: boolean
+        auto_return_confirmed:
+          type: boolean
+        auto_translate_to_english:
+          type: boolean
+      description: ''
+    carrier-account-endpoint-object:
+      type: object
+      x-examples:
+        example-1:
+          carrier_account_id: da335c3b-0f99-4558-b54a-851zx3b86975
+          carrier_account_name: QUIQUP SAME DAY
+          carrier: QUIQUP
+          daily_capacity_id: 9a4bc256-7884-46c3-aa7f-bded930cca74
+          costing_profile_id: 69f19360-12b0-4f4b-9b44-79653e2155c1
+          network_id: cd7b4dda-7250-4183-90dc-59344a095b14
+          property:
+            CLIENT_ID: client_id_value
+            CLIENT_SECRET: client_secret_value
+            BILLING_IDENTIFIER: billing_identifier_value
+            ORDER_TYPE: partner_same_day
+            BILLING_IDENTIFIER_MAPPING: '{}'
+            URL: 'https://api.staging.quiqup.com/'
+          label:
+            default_label: carrier_pdf
+          update_date: '2022-07-12T05:32:19.757Z'
+          auto_ready_to_ship: true
+          auto_return_confirmed: false
+          auto_translate_to_english: true
+          deleted: false
+      properties:
+        carrier_account_id:
+          type: string
+        carrier_account_name:
+          type: string
+        carrier:
+          type: string
+        daily_capacity_id:
+          type: string
+        in_flight_capacity_id:
+          type: string
+        costing_profile_id:
+          type: string
+        network_id:
+          type: string
+        property:
+          type: object
+        label:
+          type: object
+          properties:
+            default_label:
+              type: string
+        auto_ready_to_ship:
+          type: boolean
+        auto_return_confirmed:
+          type: boolean
+        auto_translate_to_english:
+          type: boolean
+        update_date:
+          type: string
+        deleted:
+          type: boolean
+      description: ''
+    carriyo-response-status:
+      title: Carriyo Response Status
+      type: string
+      enum:
+        - pending
+        - error
+        - booked
+        - ready-to-ship
+        - shipped
+        - out_for_delivery
+        - delivered
+        - cancelled
+        - cancelled_by_carrier
+        - failed_collection_attempt
+        - in_transit
+        - awaiting_customer_collection
+        - delivery_confirmed
+        - failed_delivery_attempt
+        - ready_for_return
+        - return_in_transit
+        - returned
+        - return_confirmed
+        - suspended
+        - missing
+        - delayed
+    collection-request:
+      title: Collection Request
+      type: object
+      description: |-
+        Collection details chosen for the shipment, such as scheduled collection date.
+
+        It can be set using one of the following options
+
+        Option 1: Provide the `scheduled_from` and `scheduled_to` to choose the scheduled date along with start and end time.
+
+        Example:
+        "collection": {
+          "scheduled_from": "2022-01-01'T'10:00:00.000+1:00",
+          "scheduled_to": "2022-01-01'T'12:00:00.000+1:00"
+        }
+
+        Option 2: Provide the `scheduled_date` only to choose the entire day.
+
+        Example:
+        "collection": {
+          "scheduled_date": "2022-01-01"
+        }
+      properties:
+        scheduled_date:
+          type: string
+          description: 'Scheduled date for delivery provided by the merchant, represented using only the date part of the ISO 8601 format.'
+          format: date
+          example: '2022-01-01'
+        scheduled_from:
+          type: string
+          description: 'Start datetime for delivery provided by the merchant, represented using both the date and time the ISO 8601 format.'
+          format: date-time
+          example: '2022-01-01T10:00:000Z'
+        scheduled_to:
+          type: string
+          description: 'End datetime for delivery provided by the merchant, represented using both the date and time the ISO 8601 format.'
+          format: date-time
+          example: '2022-01-01T12:00:000Z'
+    collection-object:
+      title: Collection Object
+      type: object
+      description: Collection details chosen for the shipment, such as scheduled collection date.
+      properties:
+        scheduled_date:
+          type: string
+          description: 'Scheduled date for collection provided by the merchant, represented using only the date part of the ISO 8601 format.'
+          format: date
+          example: '2022-01-01'
+        scheduled_from:
+          type: string
+          description: 'Start datetime for collection provided by the merchant, represented using both the date and time the ISO 8601 format.'
+          format: date-time
+          example: '2022-01-01T10:00:000Z'
+        scheduled_to:
+          type: string
+          description: 'End datetime for collection provided by the merchant, represented using both the date and time the ISO 8601 format.'
+          format: date-time
+          example: '2022-01-01T12:00:000Z'
+    create-shipment-error-response:
+      title: Create Shipment Error Response
+      type: object
+      description: The error response returned when a shipment creation request is rejected by Carriyo
+      properties:
+        status:
+          type: string
+          description: The error status
+          example: error
+        timestamp:
+          type: string
+          description: |-
+            date in format:
+            <code>yyyy-MM-dd'T'HH:mm:ss.SSSXXX</code>
+        errors:
+          type: array
+          description: Array of validation errors
+          items:
+            type: string
+    custom-attributes:
+      title: Custom Attributes
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      description: |-
+        Custom attributes in the form of a map:
+        ```
+        {"attribute1" : ["value1", "value2"], "attribute2" : ["value1", "value2"]}
+        ```
+        Please Note: You can only use custom attributes if you are subscribed to this feature.
+    custom-fields:
+      title: Custom Fields
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      description: |-
+        Custom address fields in the form of a map:
+        ```
+        {"field1" : ["value1", "value2"], "field2" : ["value1", "value2"]}
+        ```
+    delivery-request:
+      title: Delivery
+      type: object
+      properties:
+        delivery_type:
+          type: string
+          description: Pass one of the delivery types you have predefined in Carriyo
+        scheduled_from:
+          type: string
+          description: Pass the start date-time
+          format: date-time
+        scheduled_to:
+          type: string
+          description: Pass the end date-time
+          format: date-time
+        scheduled_date:
+          type: string
+          description: Pass the Scheduled Date to select an entire day
+          format: date
+      description: |-
+        The delivery options chosen for the shipment, including the delivery type and schedule.
+
+        It can be set using one of the following options
+
+        Option 1: Provide the `scheduled_from` and `scheduled_to` to choose the scheduled date along with start and end time.
+
+        Example:
+        "delivery": {
+          "delivery_type": "STANDARD",
+          "scheduled_from": "2022-01-01'T'10:00:00.000+1:00",
+          "scheduled_to": "2022-01-01'T'12:00:00.000+1:00"
+        }
+
+        Option 2: Provide the `scheduled_date` only to choose the entire day.
+
+        Example:
+        "delivery": {
+          "delivery_type": "STANDARD",
+          "scheduled_date": "2022-01-01"
+        }
+    delivery-object:
+      title: Delivery Object
+      type: object
+      description: Delivery details chosen for the shipment, such as chosen delivery type and scheduled delivery date.
+      properties:
+        delivery_type:
+          type: string
+          description: The type of the delivery. The possible values can be one of the delivery types predefined by the merchant.
+        scheduled_date:
+          type: string
+          description: 'Scheduled date for delivery provided by the merchant, represented using only the date part of the ISO 8601 format.'
+          format: date
+          example: '2022-01-01'
+        scheduled_from:
+          type: string
+          description: 'Start datetime for delivery provided by the merchant, represented using both the date and time the ISO 8601 format.'
+          format: date-time
+          example: '2022-01-01T10:00:000Z'
+        scheduled_to:
+          type: string
+          description: 'End datetime for delivery provided by the merchant, represented using both the date and time the ISO 8601 format.'
+          format: date-time
+          example: '2022-01-01T12:00:000Z'
+    dimension:
+      title: Dimension
+      type: object
+      properties:
+        width:
+          type: number
+        height:
+          type: number
+        depth:
+          type: number
+        unit:
+          type: string
+          enum:
+            - cm
+          description: |-
+            Default dimension unit is `cm` if not provided.
+    error-detail:
+      title: Error Detail
+      type: object
+      properties:
+        level:
+          type: string
+          description: 'Possible Values: ERROR, WARNING'
+        code:
+          type: string
+          description: |-
+            Possible Values:
+            required_data_missing, required_data_invalid, merchant_missing, default_merchant_not_configured, phone_number_invalid, email_invalid, email_missing, coordinates_invalid, coordinates_latitude_invalid, coordinates_longitude_invalid, carrier_account_invalid, no_carrier_assigned, partner_location_invalid, time_slot_invalid, status_change_not_allowed, custom_attribute_invalid, custom_attribute_value_invalid, parcel_item_invalid, payment_method_invalid, payment_currency_invalid, country_invalid, postcode_missing, item_origin_country_missing, item_hscode_missing, item_weight_missing, parcel_info_missing, parcel_weight_missing, parcel_dimensions_missing, label_format_invalid, weight_unit_invalid, dimension_unit_invalid, address_field_not_found, template_parsing_failed
+        field:
+          type: string
+        message:
+          type: string
+        source:
+          type: string
+          description: 'Possible Values: CARRIYO, CARRIER'
+        trigger:
+          type: string
+          description: 'Possible Values: BOOKING, CANCELLATION, TRACKING, SCHEDULING'
+        type:
+          type: string
+          description: 'Possible Values: VALIDATION, TECHNICAL, UNKNOWN'
+    document-object:
+      title: Document
+      type: object
+      properties:
+        name:
+          type: string
+          description: Document name
+        type:
+          type: string
+          description: |-
+            Possible Values:
+            commercial_invoice, customer_receipt, delivery_advice, gift_message, packing_list
+        source:
+          type: string
+          description: |-
+            Possible Values:
+            carriyo, carrier
+        format:
+          type: string
+          description: |-
+            Possible Values:
+            pdf
+        url:
+          type: string
+          description: The url of document provided by the Carriyo or carrier
+    customs-object:
+      title: Customs
+      type: object
+      description: Customs declaration details such as total declared value.
+      properties:
+        declared_value:
+          type: object
+          description: The total value of the shipment (optional) to declare for customs. This value is computed from individual item price if this is not passed.
+          properties:
+            amount:
+              minimum: 0
+              type: number
+            currency:
+              type: string
+              description: The three-letter currency code (ISO 4217) for the amount. e.g., USD
+    item-request:
+      title: Item
+      required:
+        - description
+        - price
+        - quantity
+        - sku
+      type: object
+      properties:
+        sku:
+          type: string
+          description: SKU ID of the item
+        description:
+          type: string
+          description: Description of the item
+        barcode:
+          type: string
+          description: Barcode of the item
+        image_link:
+          type: string
+          description: Image URL of the item
+        quantity:
+          minimum: 1
+          type: integer
+        price:
+          type: object
+          description: The unit price of the item
+          required:
+            - amount
+            - currency
+          properties:
+            amount:
+              minimum: 0
+              type: number
+            currency:
+              type: string
+              description: The three-letter currency code (ISO 4217) for the amount. e.g., USD
+        cost:
+          type: object
+          description: The unit cost of the item
+          required:
+            - amount
+            - currency
+          properties:
+            amount:
+              minimum: 0
+              type: number
+            currency:
+              type: string
+              description: The three-letter currency code (ISO 4217) for the amount. e.g., USD
+        weight:
+          type: object
+          description: The weight of the item
+          properties:
+            value:
+              type: number
+            unit:
+              type: string
+              enum:
+                - kg
+              description: |-
+                Default weight unit is `kg` if not provided.
+        origin_country:
+          type: string
+          description: Country of origin of the item. Usually required for cross-border shipping.
+        hs_code:
+          type: string
+          description: HS Code of the item. Usually required for cross-border shipping.
+        dangerous_goods:
+          type: boolean
+          description: If the item is classified as dangerous goods. Usually required for cross-border shipping.
+        battery:
+          type: object
+          description: Battery details of the item. Usually required for cross-border shipping.
+          properties:
+            material_type:
+              type: string
+              enum:
+                - lithium_metal
+                - lithium_ion
+            packing_type:
+              type: string
+              enum:
+                - contained_in_equipment
+                - packed_with_equipment
+        notes:
+          type: string
+          description: Additional information about the item
+    shipping-rate-item-request:
+      title: Item
+      type: object
+      properties:
+        sku:
+          type: string
+          description: SKU ID of the item. Only required when you are passing parcel_items in the parcel.
+        quantity:
+          minimum: 1
+          type: integer
+        price:
+          type: object
+          description: The unit price of the item
+          required:
+            - amount
+            - currency
+          properties:
+            amount:
+              minimum: 0
+              type: number
+            currency:
+              type: string
+              description: The three-letter currency code (ISO 4217) for the amount. e.g., USD
+        cost:
+          type: object
+          description: The unit cost of the item
+          required:
+            - amount
+            - currency
+          properties:
+            amount:
+              minimum: 0
+              type: number
+            currency:
+              type: string
+              description: The three-letter currency code (ISO 4217) for the amount. e.g., USD
+        weight:
+          type: object
+          description: The weight of the item
+          properties:
+            value:
+              type: number
+            unit:
+              type: string
+              enum:
+                - kg
+              description: |-
+                Default weight unit is `kg` if not provided.
+        origin_country:
+          type: string
+          description: Country of origin of the item. Usually required for cross-border shipping.
+        hs_code:
+          type: string
+          description: HS Code of the item. Usually required for cross-border shipping.
+        dangerous_goods:
+          type: boolean
+          description: If the item is classified as dangerous goods. Usually required for cross-border shipping.
+    item-object:
+      title: Item Object
+      type: object
+      properties:
+        sku:
+          type: string
+          description: SKU ID of the item
+        description:
+          type: string
+          description: Description of the item
+        barcode:
+          type: string
+          description: Barcode of the item
+        image_link:
+          type: string
+          description: Image URL of the item
+        quantity:
+          minimum: 1
+          type: integer
+        price:
+          type: object
+          description: The unit price of the item
+          required:
+            - amount
+            - currency
+          properties:
+            amount:
+              minimum: 0
+              type: number
+            currency:
+              type: string
+              description: The three-letter currency code (ISO 4217) for the amount. e.g., USD
+        cost:
+          type: object
+          description: The unit cost of the item
+          required:
+            - amount
+            - currency
+          properties:
+            amount:
+              minimum: 0
+              type: number
+            currency:
+              type: string
+              description: The three-letter currency code (ISO 4217) for the amount. e.g., USD
+        weight:
+          type: object
+          description: The weight of the item
+          properties:
+            value:
+              type: number
+            unit:
+              type: string
+              enum:
+                - kg
+              description: |-
+                Default weight unit is `kg` if not provided.
+        origin_country:
+          type: string
+          description: Country of origin of the item. Usually required for cross-border shipping.
+        hs_code:
+          type: string
+          description: HS Code of the item. Usually required for cross-border shipping.
+        dangerous_goods:
+          type: boolean
+          description: If the item is classified as dangerous goods. Usually required for cross-border shipping.
+        notes:
+          type: string
+          description: Additional information about the item
+      x-examples: {}
+    manifest-request:
+      title: Manifest Request
+      required:
+        - carrier_account
+        - merchant
+        - pickup
+        - pickup_schedule_from
+        - pickup_schedule_to
+        - ship_manifest_date
+        - shipment_ids
+      type: object
+      properties:
+        merchant:
+          type: string
+        shipment_ids:
+          type: array
+          items:
+            type: string
+        carrier_account:
+          type: string
+        pickup:
+          type: object
+          properties: {}
+        pickup_schedule_from:
+          type: string
+          format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        pickup_schedule_to:
+          type: string
+          format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        ship_manifest_date:
+          type: string
+          format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+    manifest-response:
+      title: Manifest Response
+      required:
+        - carrier_account
+        - manifest_id
+        - merchant
+        - pickup
+        - pickup_schedule_from
+        - pickup_schedule_to
+        - ship_manifest_date
+        - shipment_ids
+      type: object
+      properties:
+        manifest_id:
+          type: string
+        merchant:
+          type: string
+        shipment_ids:
+          type: array
+          items:
+            type: string
+        carrier_account:
+          type: string
+        pickup:
+          type: object
+          properties: {}
+        pickup_schedule_from:
+          type: string
+          format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        pickup_schedule_to:
+          type: string
+          format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+        ship_manifest_date:
+          type: string
+          format: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+    payment-request:
+      title: Payment Request
+      type: object
+      description: Payment details including the total value of the shipment and any pending Cash on Delivery amount.
+      properties:
+        payment_mode:
+          type: string
+          enum:
+            - PRE_PAID
+            - CASH_ON_DELIVERY
+          description: |-
+            Payment mode of the shipment can be `PRE_PAID` or `CASH_ON_DELIVERY`. It defaults to `PRE_PAID` for reverse shipment or if no input is provided.
+
+            `PRE_PAID` is the only valid value for reverse shipments.
+        pending_amount:
+          minimum: 0
+          type: number
+          format: double
+          description: Outstanding amount payable on delivery of the shipment. It defaults to 0 for reverse shipment or if no input is provided.
+        total_amount:
+          minimum: 0
+          type: number
+          format: double
+          description: Total value of the shipment
+        currency:
+          type: string
+          description: The three-letter currency code (ISO 4217) for the amount. e.g., USD
+      required:
+        - total_amount
+        - currency
+    payment-object:
+      title: Payment Object
+      type: object
+      description: Payment details including the total value of the shipment and any pending Cash on Delivery amount.
+      properties:
+        payment_mode:
+          type: string
+          enum:
+            - PRE_PAID
+            - CASH_ON_DELIVERY
+          description: |-
+            Payment mode of the shipment can be `PRE_PAID` or `CASH_ON_DELIVERY`. It defaults to `PRE_PAID` for reverse shipment or if no input is provided.
+
+            `PRE_PAID` is the only valid value for reverse shipments.
+        pending_amount:
+          minimum: 0
+          type: number
+          format: double
+          description: Outstanding amount payable on delivery of the shipment. It defaults to 0 if no input is provided.
+        total_amount:
+          minimum: 0
+          type: number
+          format: double
+          description: Total value of the shipment
+        currency:
+          type: string
+          description: The three-letter currency code (ISO 4217) for the amount. e.g., USD
+    parcel-request:
+      title: Parcel Request
+      type: object
+      description: List of parcels in a B2C shipment.
+      properties:
+        partner_parcel_reference:
+          type: string
+          description: A reference number to identify the parcel
+        description:
+          type: string
+          description: A description for the parcel
+        weight:
+          $ref: '#/components/schemas/weight'
+        dimension:
+          $ref: '#/components/schemas/dimension'
+        parcel_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/parcel-item'
+    shipping-rate-parcel-request:
+      title: Parcel Request
+      type: object
+      description: List of parcels in a B2C shipment.
+      properties:
+        weight:
+          $ref: '#/components/schemas/weight'
+        dimension:
+          $ref: '#/components/schemas/dimension'
+        parcel_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/parcel-item'
+    freight-request:
+      title: Freight request
+      type: object
+      description: List of packages of type pallet or carton in a B2B shipment.
+      properties:
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/package-object'
+    promised-delivery-date-request:
+      title: Promised Delivery Date Request
+      type: object
+      description: Revised promised delivery date
+      properties:
+        revised_promised_delivery_date:
+          type: string
+          description: 'Revised promised delivery date in ISO 8601 format. For Example: 2020-09-03T17:07:05.000+1:00 represents the date-time in UTC+1 time zone or 2020-09-03T17:07:05.000Z represents date-time in UTC (zulu) time zone'
+          example: '2022-01-01T09:00:00.000+1:00'
+          format: date-time
+    parcel-object:
+      title: Parcel Object
+      type: object
+      description: List of parcels in a B2C shipment.
+      properties:
+        parcel_id:
+          type: string
+          description: Unique parcel ID generated by Carriyo
+        partner_parcel_reference:
+          type: string
+          description: Unique parcel reference provided by the merchant
+        description:
+          type: string
+          description: Description for the parcel provided by the merchant
+        weight:
+          $ref: '#/components/schemas/weight'
+        dimension:
+          $ref: '#/components/schemas/dimension'
+        parcel_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/parcel-item'
+    parcel-item:
+      title: Parcel Item
+      type: object
+      properties:
+        sku:
+          type: string
+        quantity:
+          type: integer
+    package-object:
+      title: Package object
+      type: object
+      description: List of packages of type pallet or carton in a B2B shipment.
+      properties:
+        package_reference:
+          type: string
+          description: A reference number to identify the package
+        type:
+          enum:
+            - pallet
+            - carton
+        weight:
+          $ref: '#/components/schemas/weight'
+        dimension:
+          $ref: '#/components/schemas/dimension'
+        parent:
+          type: string
+          description: A reference number to identify the parent package
+    shipping-rate-package-object:
+      title: Package object
+      type: object
+      description: List of packages of type pallet or carton in a B2B shipment.
+      properties:
+        type:
+          enum:
+            - pallet
+            - carton
+        weight:
+          $ref: '#/components/schemas/weight'
+        dimension:
+          $ref: '#/components/schemas/dimension'
+    personal_id:
+      title: Personal ID
+      type: object
+      description: 'ID of the person to whom the shipment is addressed'
+      properties:
+        id:
+          type: string
+          description: 'ID number'
+          example: U123457896
+        type:
+          type: string
+          description: 'ID type'
+          example: Passport
+    free-form-request:
+      title: Free-Form Request
+      description: |-
+        Provide the contact and address information
+      type: object
+      properties:
+        contact_name:
+          type: string
+          description: Name of the contact person or business
+          example: Jo Bloggs
+        contact_phone:
+          type: string
+          description: |-
+            Primary phone number for contact in E164 Format with country code.  e.g., +16175551212
+            Conditionally mandatory based on Account Settings
+          format: E164 Format (with +<country-code-prefix>)
+          example: +16175551212
+        alternate_phone:
+          type: string
+          description: Alternate phone number for contact in E164 Format with country code.  e.g., +16175551210
+          format: E164 Format (with +<country-code-prefix>)
+          example: +16175551210
+        contact_email:
+          type: string
+          description: |-
+            Email address for contact
+            Conditionally mandatory based on Account Settings
+          format: RFC 5322
+          example: jo.bloggs@gmail.com
+        address1:
+          type: string
+          description: Address Line 1 (e.g., street, PO Box, or company name).
+          example: 1 Financial Centre Road
+        address2:
+          type: string
+          description: Address Line 2 (e.g., apartment, floor, unit, or building).
+          example: Downtown Views, Apartment 101
+        area:
+          type: string
+          description: |-
+            District, suburb or neighbourhood, represented by the Carriyo Area Code if known. If not, it's a free text.
+
+            Please use the Carriyo standard Area Code when available, to ensure that Carriyo can map this information correctly to the carrier.
+
+            [Please refer to the Carriyo Geo List for more information.](/guides/carriyo-geo-list)
+          example: DOWNTOWN-DUBAI
+        city:
+          type: string
+          description: |-
+            City, town, or village, represented by the Carriyo City Code if known. If not, it's a free text.
+
+            Please use the Carriyo standard City Code when available, to ensure that Carriyo can map this information correctly to the carrier.
+
+            [Please refer to the Carriyo Geo List for more information.](/guides/carriyo-geo-list)
+          example: DUBAI
+        state:
+          type: string
+          description: |-
+            State, county, province, or region, represented by the Carriyo State Code if known. If not, it's a free text.
+
+            **Note: The state is automatically set if a standard Carriyo city is passed.**
+
+            [Please refer to the Carriyo Geo List for more information.](/guides/carriyo-geo-list)
+          example: DUBAI
+        postcode:
+          type: string
+          description: ZIP or postal code
+          example: E1 6AN
+        country:
+          type: string
+          description: Two-letter country code (ISO 3166-1 alpha-2).
+          example: AE
+          format: Two-letter ISO country code
+        coords:
+          type: array
+          description: Latitude and longitude (decimal degrees) of the address as an array. e.g., [25.19741, 55.27442]
+          items:
+            type: number
+            example: 41.40338
+        type:
+          type: string
+          description: Type of address. i.e. business or residential
+          enum:
+            - residential
+            - business
+        notes:
+          type: string
+          description: Any additional notes e.g., "Leave the parcel next to the bin" or "Collect the parcel from the neighbour"
+          example: Leave the parcel next to the bin
+        what3words:
+          type: string
+          format: ///three.word.address
+        personal_id:
+          $ref: '#/components/schemas/personal_id'
+        street:
+          type: string
+          description: Street number or name
+        building:
+          type: string
+          description: Building number or name
+        floor:
+          type: string
+          description: Floor number
+        flat:
+          type: string
+          description: Flat number
+        po_box:
+          type: string
+          description: Box number if the address is a PO Box
+        collection_point_id:
+          type: string
+          description: ID of the carrier's collection point for deliveries held at the carrier location for collection
+        custom_fields:
+          $ref: '#/components/schemas/custom-fields'
+      required:
+        - contact_name
+        - address1
+        - city
+        - country
+    shipping-rate-location-request:
+      title: Shipping Rate Location Request
+      description: |-
+        Provide geography information
+      type: object
+      properties:
+        area:
+          type: string
+          description: |-
+            District, suburb or neighbourhood, represented by the Carriyo Area Code if known. If not, it's a free text.
+
+            Please use the Carriyo standard Area Code when available, to ensure that Carriyo can map this information correctly to the carrier.
+
+            [Please refer to the Carriyo Geo List for more information.](/guides/carriyo-geo-list)
+          example: DOWNTOWN-DUBAI
+        city:
+          type: string
+          description: |-
+            City, town, or village, represented by the Carriyo City Code if known. If not, it's a free text.
+
+            Please use the Carriyo standard City Code when available, to ensure that Carriyo can map this information correctly to the carrier.
+
+            [Please refer to the Carriyo Geo List for more information.](/guides/carriyo-geo-list)
+          example: DUBAI
+        state:
+          type: string
+          description: |-
+            State, county, province, or region, represented by the Carriyo State Code if known. If not, it's a free text.
+
+            **Note: The state is automatically set if a standard Carriyo city is passed.**
+
+            [Please refer to the Carriyo Geo List for more information.](/guides/carriyo-geo-list)
+          example: DUBAI
+        postcode:
+          type: string
+          description: ZIP or postal code
+          example: E1 6AN
+        country:
+          type: string
+          description: Two-letter country code (ISO 3166-1 alpha-2).
+          example: AE
+          format: Two-letter ISO country code
+        coords:
+          type: array
+          description: Latitude and longitude (decimal degrees) of the address as an array. e.g., [25.19741, 55.27442]
+          items:
+            type: number
+            example: 41.40338
+      required:
+        - city
+        - country
+    location-request:
+      title: Location Request
+      type: object
+      description: 'Specify the Carriyo location ID (`partner_location_id`), or the location code (`partner_location_code`) you defined when you created the location in Carriyo.'
+      properties:
+        partner_location_id:
+          type: string
+          description: Carriyo's internal location id to use for the pickup
+        partner_location_code:
+          type: string
+          description: You can also pass the unique locaton code intead of the location id
+    location-object:
+      title: Location Object
+      type: object
+      description: Either a free-form address or a predefined location.
+      properties:
+        partner_location_id:
+          type: string
+          description: ID of the location chosen by the merchant
+        contact_name:
+          type: string
+          description: Name of the contact person or business
+          example: Jo Bloggs
+        contact_phone:
+          type: string
+          description: |-
+            Primary phone number for contact in E164 Format with country code.  e.g., +16175551212
+            Conditionally mandatory based on Account Settings
+          format: E164 Format (with +<country-code-prefix>)
+          example: +16175551212
+        alternate_phone:
+          type: string
+          description: Alternate phone number for contact in E164 Format with country code.  e.g., +16175551210
+          format: E164 Format (with +<country-code-prefix>)
+          example: +16175551210
+        contact_email:
+          type: string
+          description: |-
+            Email address for contact
+            Conditionally mandatory based on Account Settings
+          format: RFC 5322
+          example: jo.bloggs@gmail.com
+        address1:
+          type: string
+          description: Address Line 1 (e.g., street, PO Box, or company name).
+          example: 1 Financial Centre Road
+        address2:
+          type: string
+          description: Address Line 2 (e.g., apartment, floor, unit, or building).
+          example: Downtown Views, Apartment 101
+        area:
+          type: string
+          description: |-
+            District, suburb or neighbourhood, represented by the Carriyo Area Code if known. If not, it's a free text.
+
+            [Please refer to the Carriyo Geo List for more information.](/guides/carriyo-geo-list)
+          example: DOWNTOWN-DUBAI
+        input_area:
+          type: string
+          description: |-
+            (Ready-only) Preserves the original input provided for "area". It is useful when Carriyo is instructed to automatically recognise the Carriyo area code.
+          example: Downtown Dubai
+        area_coords:
+          type: array
+          description: |-
+            (Read-only) Approximate latitude and longitude for the area, if found in Carriyo's database. e.g., [25.1949849, 55.2784141]
+          items:
+            type: number
+        city:
+          type: string
+          description: |-
+            City, town, or village, represented by the Carriyo City Code if known. If not, it's a free text.
+
+            [Please refer to the Carriyo Geo List for more information.](/guides/carriyo-geo-list)
+          example: DUBAI
+        input_city:
+          type: string
+          description: |-
+            (Ready-only) Preserves the original input provided for "city". It is useful when Carriyo is instructed to automatically recognise the Carriyo city code.
+          example: Dubai
+        city_coords:
+          type: array
+          description: |-
+            (Read-only) Approximate latitude and longitude for the city, if found in Carriyo's database. e.g., [25.1949849, 55.2784141]
+          items:
+            type: number
+        state:
+          type: string
+          description: |-
+            State, county, province, or region, represented by the Carriyo State Code if known. If not, it's a free text.
+
+            [Please refer to the Carriyo Geo List for more information.](/guides/carriyo-geo-list)
+          example: DUBAI
+        input_state:
+          type: string
+          description: |-
+            (Ready-only) Preserves the original input provided for "state". It is useful when Carriyo is instructed to automatically recognise the Carriyo state code.
+          example: Dubai
+        postcode:
+          type: string
+          description: ZIP or postal code
+          example: E1 6AN
+        country:
+          type: string
+          description: Two-letter country code (ISO 3166-1 alpha-2).
+          example: AE
+          format: Two-letter ISO country code
+        coords:
+          type: array
+          description: Latitude and longitude (decimal degrees) of the address as an array. e.g., [25.19741, 55.27442]
+          items:
+            type: number
+            example: 41.40338
+        type:
+          type: string
+          description: Type of address. i.e. business or residential
+          enum:
+            - residential
+            - business
+        notes:
+          type: string
+          description: Any additional notes e.g., "Leave the parcel next to the bin" or "Collect the parcel from the neighbour"
+          example: Leave the parcel next to the bin
+        what3words:
+          type: string
+          format: ///three.word.address
+        personal_id:
+          $ref: '#/components/schemas/personal_id'
+        street:
+          type: string
+          description: Street number or name
+        building:
+          type: string
+          description: Building number or name
+        floor:
+          type: string
+          description: Floor number
+        flat:
+          type: string
+          description: Flat number
+        po_box:
+          type: string
+          description: Box number if the address is a PO Box
+        collection_point_id:
+          type: string
+          description: ID of the carrier's collection point for deliveries held at the carrier location for collection
+        custom_fields:
+          $ref: '#/components/schemas/custom-fields'
+    post-shipping-info:
+      title: Post Shipping Info
+      type: object
+      description: Booking details such as tracking number, labels etc.
+      properties:
+        status:
+          type: string
+          description: The status of the shipment (one of the standard Carriyo status)
+        reason_code:
+          type: string
+          description: The reason code linked to the status (one of the standard Carriyo reason codes or a merchant defined status)
+        carrier_status:
+          type: string
+          description: The raw status provided by the carrier
+        carrier_status_description:
+          type: string
+          description: The status description provided by the carrier
+        carrier_status_date:
+          type: string
+          description: 'The Date when the carrier status was last updated in ISO 8601 format. Example: 2022-01-01T17:07:05.000Z'
+          format: date-time
+        carrier_status_location:
+          type: string
+          description: 'The last known location of the shipment provided by the carrier. For example: Dubai'
+        tracking_no:
+          type: string
+          description: The unique shipment tracking number provided by the carrier
+        parcel_tracking_numbers:
+          type: array
+          description: Tracking numbers for individual parcels if generated by the carrier
+          items:
+            type: object
+            properties:
+              parcel_id:
+                type: string
+              tracking_number:
+                type: string
+        default_label_url:
+          type: string
+          description: The url for the default label - either carrier or carriyo generated
+        carrier_pdf_label_url:
+          type: string
+          description: The url of PDF label provided by the carrier
+        carriyo_pdf_label_url:
+          type: string
+          description: The url of PDF label generated by Carriyo
+        carriyo_zpl_label_url:
+          type: string
+          description: The url of ZPL label generated by Carriyo
+        carrier_tracking_url:
+          type: string
+          description: The url of tracking page provided by the carrier
+        carriyo_tracking_url:
+          type: string
+          description: The url of tracking page provided by the Carriyo
+        carriyo_feedback_url:
+          type: string
+          description: The url of feedback page provided by the Carriyo
+        carriyo_pinpoint_url:
+          type: string
+          description: The url of pinpoint page provided by the Carriyo
+        driver_name:
+          type: string
+          description: The name of the driver delivering the shipment
+        driver_phone:
+          type: string
+          description: The phone number of the driver delivering the shipment
+        recipient_name:
+          type: string
+          description: The name of the recipient to whom shipment was delivered
+        proof_of_delivery:
+          type: string
+          description: The url of document or image containing the proof of delivery
+        key_milestones:
+          type: object
+          properties:
+            pending:
+              type: string
+            error:
+              type: string
+            booked:
+              type: string
+            ready_to_ship:
+              type: string
+            cancelled:
+              type: string
+            cancelled_by_carrier:
+              type: string
+            failed_collection_attempt:
+              type: string
+            shipped:
+              type: string
+            in_transit:
+              type: string
+            out_for_delivery:
+              type: string
+            awaiting_customer_collection:
+              type: string
+            delivered:
+              type: string
+            delivery_confirmed:
+              type: string
+            failed_delivery_attempt:
+              type: string
+            ready_for_return:
+              type: string
+            return_in_transit:
+              type: string
+            returned:
+              type: string
+            return_confirmed:
+              type: string
+            suspended:
+              type: string
+            missing:
+              type: string
+            delayed:
+              type: string
+        failed_delivery_attempts:
+          type: number
+          description: The total number of failed delivery attempts on the shipment
+        estimated_delivery_date:
+          type: string
+          description: 'The date the shipment is expected to be delivered in ISO 8601 format. Example: 2022-01-01T17:07:05.000Z'
+          format: date-time
+        estimated_ship_date:
+          type: string
+          description: 'The date the shipment is expected to be shipped in ISO 8601 format. Example: 2022-03-01T17:07:05.000Z'
+          format: date-time
+        error_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/error-detail'
+        documents:
+          type: array
+          description: 'Shipping documents such as commercial invoice, packing list etc'
+          items:
+            $ref: '#/components/schemas/document-object'
+    estimated-shipping-cost:
+      type: object
+      description: 'The estimated cost of the shipping based either on the costing profile you have configured for the carrier or carrier costing API response'
+      properties:
+        amount:
+          type: number
+          example: 10
+        currency:
+          type: string
+          example: USD
+        breakdown:
+          type: array
+          description: 'The breakdown of shipping cost.'
+          items:
+            $ref: '#/components/schemas/breakdown-object'
+    breakdown-object:
+      type: object
+      description: 'The estimated cost of the shipping based either on the costing profile you have configured for the carrier or carrier costing API response'
+      properties:
+        amount:
+          type: number
+          example: 10
+        currency:
+          type: string
+          example: USD
+        description:
+          type: string
+          example: 'Total VAT Charge'
+    references-request:
+      title: References Request
+      type: object
+      description: |-
+        References for a shipment, provided by the merchant.
+
+        The `partner_order_reference` is mandatory but not required to be unique. It is usually the customer facing order number.
+
+        The `partner_shipment_reference` must be unique for every shipment. It is mandatory, but is copied from `partner_order_reference` if it is not provided.
+
+        If a single order has multiple shipments, then they will share the `partner_order_reference` but have unique `partner_shipment_reference`.
+      properties:
+        partner_order_reference:
+          type: string
+          description: Order reference provided by the merchant
+        partner_shipment_reference:
+          type: string
+          description: Unique shipment reference provided by the merchant
+        alternate_reference:
+          type: string
+          description: An alternate reference that can be used for searching shipments in Carriyo or mapping references to the carrier.
+        other_references:
+          type: array
+          description: A list of references that can be used for searching shipments in Carriyo
+          items:
+            type: string
+      required:
+        - partner_order_reference
+        - partner_shipment_reference
+    references-object:
+      title: References Object
+      type: object
+      description: References for a shipment, provided by the merchant.
+      properties:
+        partner_order_reference:
+          type: string
+          description: Order reference provided by the merchant
+        partner_shipment_reference:
+          type: string
+          description: Unique shipment reference provided by the merchant
+        alternate_reference:
+          type: string
+          description: An alternate reference that can be used for searching shipments in Carriyo or mapping references to the carrier.
+        other_references:
+          type: array
+          description: A list of references that can be used for searching shipments in Carriyo
+          items:
+            type: string
+    shipment-patch-request:
+      title: Shipment Patch Update Request
+      type: object
+      properties:
+        order_type:
+          type: string
+          description: Pass one of the order types you have predefined in Carriyo
+        carrier_account:
+          $ref: '#/components/schemas/carrier-account-request'
+        payment:
+          $ref: '#/components/schemas/payment-request'
+        collection:
+          $ref: '#/components/schemas/collection-request'
+        delivery:
+          $ref: '#/components/schemas/delivery-request'
+        pickup:
+          description: |-
+            Pickup address for the shipment. You can either pass a free-form address or a predefined location.
+
+            For forward shipments, you must pass a predefined pickup location. Carriyo will copy the contact and address fields from the specified location. To specify the location, you can use Carriyo's internal location ID (`partner_location_id`), or your own location code (`partner_location_code`) defined when you created the location in Carriyo.
+
+            For reverse shipments, you can pass the customer's pickup address as a free-form pickup address.
+          anyOf:
+            - $ref: '#/components/schemas/location-request'
+            - $ref: '#/components/schemas/free-form-request'
+        dropoff:
+          description: |-
+            Dropoff address for the shipment. You can either pass a free-form address or a predefined location.
+
+            For forward shipments, you can pass the customer's dropoff address as a free-form address.
+
+            For reverse shipments, you must pass a predefined dropoff location. Carriyo will copy the contact and address fields from the specified location. To specify the location, you can use Carriyo's internal location ID (`partner_location_id`), or your own location code (`partner_location_code`) defined when you created the location in Carriyo.
+          anyOf:
+            - $ref: '#/components/schemas/free-form-request'
+            - $ref: '#/components/schemas/location-request'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/item-request'
+          description: List of individual items or SKUs in a shipment.
+        parcels:
+          type: array
+          items:
+            $ref: '#/components/schemas/parcel-request'
+          description: List of parcels in a B2C shipment.
+        freight:
+          type: object
+          description: List of packages of type pallet or carton in a B2B shipment.
+          properties:
+            packages:
+              type: array
+              items:
+                $ref: '#/components/schemas/package-object'
+        customs:
+          $ref: '#/components/schemas/customs-object'
+        custom_attributes:
+          $ref: '#/components/schemas/custom-attributes'
+        order_date:
+          type: string
+          format: date-time
+    shipment-draft-request:
+      title: Shipment Draft Request
+      type: object
+      properties:
+        entity_type:
+          type: string
+          default: FORWARD
+          enum:
+            - FORWARD
+            - REVERSE
+        merchant:
+          type: string
+          description: Merchant ID is mandatory to create a shipment
+          example: YOUR_MERCHANT_ID
+        references:
+          $ref: '#/components/schemas/references-request'
+        carrier_account:
+          $ref: '#/components/schemas/carrier-account-request'
+        payment:
+          $ref: '#/components/schemas/payment-request'
+        collection:
+          $ref: '#/components/schemas/collection-request'
+        delivery:
+          $ref: '#/components/schemas/delivery-request'
+        pickup:
+          description: |-
+            Pickup address for the shipment. You can either pass a free-form address or a predefined location.
+
+            For forward shipments, you must pass a predefined pickup location. Carriyo will copy the contact and address fields from the specified location. To specify the location, you can use Carriyo's internal location ID (`partner_location_id`), or your own location code (`partner_location_code`) as defined when you created the location in Carriyo.
+
+            For reverse shipments, you can pass the customer's pickup address as a free-form pickup address.
+          anyOf:
+            - $ref: '#/components/schemas/location-request'
+            - $ref: '#/components/schemas/free-form-request'
+        dropoff:
+          description: |-
+            Dropoff address for the shipment. You can either pass a free-form address or a predefined location.
+
+            For forward shipments, you can pass the customer's dropoff address as a free-form address.
+
+            For reverse shipments, you must pass a predefined dropoff location. Carriyo will copy the contact and address fields from the specified location. To specify the location, you can use Carriyo's internal location ID (`partner_location_id`), or your own location code (`partner_location_code`) as defined when you created the location in Carriyo.
+          anyOf:
+            - $ref: '#/components/schemas/free-form-request'
+            - $ref: '#/components/schemas/location-request'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/item-request'
+          description: List of individual items or SKUs in a shipment.
+        parcels:
+          type: array
+          items:
+            $ref: '#/components/schemas/parcel-request'
+          description: List of parcels in a B2C shipment.
+        freight:
+          title: Freight request
+          type: object
+          description: List of packages of type pallet or carton in a B2B shipment.
+          properties:
+            packages:
+              type: array
+              items:
+                $ref: '#/components/schemas/package-object'
+        customs:
+          $ref: '#/components/schemas/customs-object'
+        custom_attributes:
+          $ref: '#/components/schemas/custom-attributes'
+        order_date:
+          type: string
+          description: |-
+            Date-time in ISO 8601 format.
+
+            Example: 2020-09-03T17:07:05.000+1:00 represents the date-time in UTC+1 time zone or 2020-09-03T17:07:05.000Z represents date-time in UTC (zulu) time zone
+          format: date-time
+          example: '2022-01-01T09:00:00.000+1:00'
+        order_type:
+          type: string
+          description: Pass one of the order types you have predefined in Carriyo
+          example: HOME_DELIVERY
+        language:
+          type: string
+          description: 'Two letter ISO 639-1 code. Example: en'
+          example: en
+      required:
+        - merchant
+        - references
+    shipment-request:
+      title: Shipment Request
+      type: object
+      properties:
+        entity_type:
+          type: string
+          default: FORWARD
+          enum:
+            - FORWARD
+            - REVERSE
+        merchant:
+          type: string
+          description: Merchant ID is mandatory to create a shipment
+          example: YOUR_MERCHANT_ID
+        references:
+          $ref: '#/components/schemas/references-request'
+        carrier_account:
+          $ref: '#/components/schemas/carrier-account-request'
+        payment:
+          $ref: '#/components/schemas/payment-request'
+        collection:
+          $ref: '#/components/schemas/collection-request'
+        delivery:
+          $ref: '#/components/schemas/delivery-request'
+        pickup:
+          description: |-
+            Pickup address for the shipment. You can either pass a free-form address or a predefined location.
+
+            For forward shipments, you must pass a predefined pickup location. Carriyo will copy the contact and address fields from the specified location. To specify the location, you can use Carriyo's internal location ID (`partner_location_id`), or your own location code (`partner_location_code`) as defined when you created the location in Carriyo.
+
+            For reverse shipments, you can pass the customer's pickup address as a free-form pickup address.
+          anyOf:
+            - $ref: '#/components/schemas/location-request'
+            - $ref: '#/components/schemas/free-form-request'
+        dropoff:
+          description: |-
+            Dropoff address for the shipment. You can either pass a free-form address or a predefined location.
+
+            For forward shipments, you can pass the customer's dropoff address as a free-form address.
+
+            For reverse shipments, you must pass a predefined dropoff location. Carriyo will copy the contact and address fields from the specified location. To specify the location, you can use Carriyo's internal location ID (`partner_location_id`), or your own location code (`partner_location_code`) as defined when you created the location in Carriyo.
+          anyOf:
+            - $ref: '#/components/schemas/free-form-request'
+            - $ref: '#/components/schemas/location-request'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/item-request'
+          description: List of individual items or SKUs in a shipment.
+        customs:
+          $ref: '#/components/schemas/customs-object'
+        parcels:
+          type: array
+          items:
+            $ref: '#/components/schemas/parcel-request'
+          description: List of parcels in a B2C shipment.
+        freight:
+          title: Freight request
+          type: object
+          description: List of packages of type pallet or carton in a B2B shipment.
+          properties:
+            packages:
+              type: array
+              items:
+                $ref: '#/components/schemas/package-object'
+        custom_attributes:
+          $ref: '#/components/schemas/custom-attributes'
+        order_date:
+          type: string
+          description: |-
+            Date-time in ISO 8601 format.
+
+            Example: 2020-09-03T17:07:05.000+1:00 represents the date-time in UTC+1 time zone or 2020-09-03T17:07:05.000Z represents date-time in UTC (zulu) time zone
+          format: date-time
+          example: '2022-01-01T09:00:00.000+1:00'
+        order_type:
+          type: string
+          description: Pass one of the order types you have predefined in Carriyo
+          example: HOME_DELIVERY
+        language:
+          type: string
+          description: 'Two letter ISO 639-1 code. Example: en'
+          example: en
+      required:
+        - merchant
+        - references
+        - payment
+        - pickup
+        - dropoff
+        - items
+    shipping-rates-request:
+      title: Get shipping rates for one or more carriers.
+      description: This endpoint will return shipping rates based on either costing profile for that particular carrier or getting rates from the carrier real time.
+      type: object
+      properties:
+        merchant:
+          type: string
+          default: Primary merchant ID if only 1 registered
+          description: ID of the merchant
+          example: MY_BRAND
+        entity_type:
+          type: string
+          default: FORWARD
+          enum:
+            - FORWARD
+            - REVERSE
+        carrier_accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/carrier-account-request'
+          description: List of carrier accounts for which shipping rate is requested.
+        payment:
+          $ref: '#/components/schemas/payment-request'
+        customs:
+          $ref: '#/components/schemas/customs-object'
+        collection:
+          $ref: '#/components/schemas/collection-object'
+        delivery:
+          $ref: '#/components/schemas/delivery-object'
+        pickup:
+          description: |-
+            Pickup address for the shipment. You can either pass a free-form address or a predefined location.
+
+            For forward shipments, you must pass a predefined pickup location. Carriyo will copy the contact and address fields from the specified location. To specify the location, you can use Carriyo's internal location ID (`partner_location_id`), or your own location code (`partner_location_code`) as defined when you created the location in Carriyo.
+
+            For reverse shipments, you can pass the customer's pickup address as a free-form pickup address.
+          anyOf:
+            - $ref: '#/components/schemas/location-request'
+            - $ref: '#/components/schemas/shipping-rate-location-request'
+        dropoff:
+          description: |-
+            Dropoff address for the shipment. You can either pass a free-form address or a predefined location.
+
+            For forward shipments, you can pass the customer's dropoff address as a free-form address.
+
+            For reverse shipments, you must pass a predefined dropoff location. Carriyo will copy the contact and address fields from the specified location. To specify the location, you can use Carriyo's internal location ID (`partner_location_id`), or your own location code (`partner_location_code`) as defined when you created the location in Carriyo.
+          anyOf:
+            - $ref: '#/components/schemas/shipping-rate-location-request'
+            - $ref: '#/components/schemas/location-request'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/shipping-rate-item-request'
+          description: List of individual items or SKUs in a shipment.
+        parcels:
+          type: array
+          items:
+            $ref: '#/components/schemas/shipping-rate-parcel-request'
+          description: (One of parcels or freight required) List of parcels in a B2C shipment.
+        freight:
+          title: Freight request
+          type: object
+          description: (One of parcels or freight required) List of packages of type pallet or carton in a B2B shipment.
+          properties:
+            packages:
+              type: array
+              items:
+                $ref: '#/components/schemas/shipping-rate-package-object'
+        custom_attributes:
+          $ref: '#/components/schemas/custom-attributes'
+      required:
+        - carrier_account
+        - pickup
+        - dropoff
+        - parcels
+    shipping-rates-response:
+      title: Shipping rates response
+      type: object
+      description: The response returned for shipping rates for one or more carriers.
+      properties:
+        shipping_rates:
+          type: array
+          items:
+            $ref: '#/components/schemas/shipping-rate'
+    shipping-rate:
+      type: object
+      description: 'Shipping Rate based on either the costing profile you have configured for the carrier or carrier costing api response'
+      properties:
+        estimated_shipping_cost:
+          $ref: '#/components/schemas/estimated-shipping-cost'
+        carrier:
+          type: string
+          example: UPS
+        carrier_account_id:
+          type: string
+          example: ca584701-f531-482f-ab40-923dca644127
+        carrier_account_name:
+          type: string
+          example: UPS - Dubai
+        service_name:
+          type: string
+        service_description:
+          type: string
+        delivery_promise:
+          type: string
+        estimated_days:
+          type: integer
+        error_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/error-detail'
+    shipment-object:
+      title: Shipment Object
+      type: object
+      properties:
+        shipment_id:
+          type: string
+          description: Unique identifier for the shipment
+          example: XYZABC123
+        entity_type:
+          type: string
+          enum:
+            - FORWARD
+            - REVERSE
+          description: The type of the shipment is either FORWARD or REVERSE
+        merchant:
+          type: string
+          description: ID of the merchant that created this shipment
+          example: MY_BRAND
+        references:
+          $ref: '#/components/schemas/references-object'
+        carrier_account:
+          $ref: '#/components/schemas/carrier-account-object'
+        payment:
+          $ref: '#/components/schemas/payment-object'
+        collection:
+          $ref: '#/components/schemas/collection-object'
+        delivery:
+          $ref: '#/components/schemas/delivery-object'
+        pickup:
+          $ref: '#/components/schemas/location-object'
+        dropoff:
+          $ref: '#/components/schemas/location-object'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/item-object'
+          description: List of individual items or SKUs in a shipment.
+        freight:
+          title: Freight request
+          type: object
+          description: List of packages of type pallet or carton in a B2B shipment.
+          properties:
+            packages:
+              type: array
+              items:
+                $ref: '#/components/schemas/package-object'
+        customs:
+          $ref: '#/components/schemas/customs-object'
+        parcels:
+          type: array
+          items:
+            $ref: '#/components/schemas/parcel-object'
+          description: List of parcels in a B2C shipment.
+        post_shipping_info:
+          $ref: '#/components/schemas/post-shipping-info'
+        custom_attributes:
+          type: object
+          description: Additional custom attributes provided by the merchant.
+        order_date:
+          type: string
+          format: date-time
+          description: The date the customer order was received by the merchant
+          example: '2022-01-01T09:00:00.000Z'
+        order_type:
+          type: string
+          description: The type of the order. The possible values can be one of the order types predefined by the merchant.
+          example: HOME_DELIVERY
+        creation_date:
+          type: string
+          format: date-time
+          description: The date the shipment was created in Carriyo
+          example: '2022-01-01T09:00:00.000Z'
+        update_date:
+          type: string
+          format: date-time
+          description: The date the shipment was last updated in Carriyo
+          example: '2022-01-01T09:00:00.000Z'
+        confirmation_date:
+          type: string
+          format: date-time
+          description: The date the shipment was confirmed for booking
+          example: '2022-01-01T09:00:00.000Z'
+        estimated_process_date:
+          type: string
+          format: date-time
+          description: 'The date the shipment is expected to be processed in ISO 8601 format. Example: 2022-03-01T17:07:05.000Z'
+        promised_delivery_date:
+          type: string
+          format: date-time
+          description: 'The promised delivery date for the shipment in ISO 8601 format. Example: 2022-03-01T17:07:05.000Z'
+          example: '2022-01-01T09:00:00.000Z'
+        original_promised_delivery_date:
+          type: string
+          format: date-time
+          description: 'The original promised delivery date for the shipment in ISO 8601 format (if the promise is updated). Example: 2022-03-01T17:07:05.000Z'
+          example: '2022-01-01T09:00:00.000Z'
+        estimated_shipping_cost:
+          $ref: '#/components/schemas/estimated-shipping-cost'
+        language:
+          type: string
+          description: 'Two letter ISO 639-1 code. Example: en'
+          example: en
+        return_request_id:
+          type: string
+          description: ID of the Return request that initiated the reverse shipment
+          example: rma_123abcXYZ
+    update-parcels-request:
+      title: Update Parcels Request
+      type: object
+      properties:
+        parcels:
+          type: array
+          items:
+            $ref: '#/components/schemas/parcel-request'
+    weight:
+      title: Weight
+      type: object
+      properties:
+        value:
+          type: number
+        unit:
+          type: string
+          enum:
+            - kg
+          description: |-
+            Default weight unit is `kg` if not provided.
+    automation-ruleset-with-rules-request:
+      title: Automation Ruleset with Rules Request
+      type: object
+      properties:
+        automation_rule_set:
+          $ref: '#/components/schemas/ruleset-request'
+        automation_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/automation-rule-request'
+      required:
+        - automation_rule_set
+    automation-ruleset-with-rules-response:
+      title: Automation Ruleset with Rules Response
+      type: object
+      properties:
+        automation_rule_set:
+          $ref: '#/components/schemas/ruleset-response'
+        automation_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/automation-rule-response'
+      required:
+        - automation_rule_set
+    service-level-ruleset-with-rules-request:
+      title: Service Level Ruleset with Rules Request
+      type: object
+      properties:
+        automation_rule_set:
+          $ref: '#/components/schemas/ruleset-request'
+        automation_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/service-level-rule-request'
+      required:
+        - automation_rule_set
+    service-level-ruleset-with-rules-response:
+      title: Service Level Ruleset with Rules Response
+      type: object
+      properties:
+        automation_rule_set:
+          $ref: '#/components/schemas/ruleset-response'
+        automation_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/service-level-rule-response'
+      required:
+        - automation_rule_set
+    ruleset-request:
+      title: Ruleset Request
+      type: object
+      properties:
+        name:
+          type: string
+        entity_type:
+          type: string
+          enum:
+            - FORWARD
+            - REVERSE
+        merchants:
+          type: array
+          description: List of Merchant ids used in Ruleset. Use ["_ANY"] for all merchants
+          items:
+            type: string
+        countries:
+          type: array
+          description: List of country iso2 codes used in Ruleset. Use ["_ANY"] for all countries
+          items:
+            type: string
+        status:
+          $ref: '#/components/schemas/status-field'
+      required:
+        - name
+        - entity_type
+        - merchants
+        - countries
+        - status
+    ruleset-response:
+      title: Ruleset Response
+      type: object
+      properties:
+        tenant:
+          type: string
+        rule_set_id:
+          type: string
+        name:
+          type: string
+        entity_type:
+          type: string
+          enum:
+            - FORWARD
+            - REVERSE
+        merchants:
+          type: array
+          description: List of Merchant ids used in Ruleset. Use ["_ANY"] for all merchants
+          items:
+            type: string
+        countries:
+          type: array
+          description: List of country iso2 codes used in Ruleset. Use ["_ANY"] for all countries
+          items:
+            type: string
+        status:
+          $ref: '#/components/schemas/status-field'
+        creation_date:
+          type: string
+          format: date-time
+        update_date:
+          type: string
+          format: date-time
+    automation-rule-request:
+      title: Automation Rule Request
+      type: object
+      properties:
+        rule_name:
+          type: string
+        carrier_accounts:
+          description: Carrier accounts result
+          type: array
+          items:
+            type: object
+            properties:
+              carrier_account_id:
+                type: string
+        carrier_choice:
+          description: Mandatory if 'carrier_accounts' contains more than 1 entry. Used to select the best carrier
+          type: string
+          enum:
+            - CHEAPEST_CARRIER
+        sequence:
+          type: number
+          description: Sequence number used for rules prioritisation (lower is more important)
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/status-field'
+        source_type:
+          description: shipment.source.source_type matches condition
+          allOf:
+            - $ref: '#/components/schemas/string-condition-field'
+        payment_type:
+          description: shipment.payment.payment_type matches condition
+          allOf:
+            - $ref: '#/components/schemas/string-condition-field'
+        delivery_type:
+          description: shipment.delivery.delivery_type matches condition
+          allOf:
+            - $ref: '#/components/schemas/string-condition-field'
+        order_type:
+          description: shipment.order_type matches condition
+          allOf:
+            - $ref: '#/components/schemas/string-condition-field'
+        merchant:
+          description: shipment.merchant matches condition
+          allOf:
+            - $ref: '#/components/schemas/string-condition-field'
+        pickup_partner_location_ids:
+          description: shipment.pickup.partner_location_id matches condition
+          allOf:
+            - $ref: '#/components/schemas/string-condition-field'
+        dropoff_partner_location_ids:
+          description: shipment.dropoff.partner_location_id matches condition
+          allOf:
+            - $ref: '#/components/schemas/string-condition-field'
+        dropoff_v2:
+          description: shipment.dropoff country state city area condition
+          allOf:
+            - $ref: '#/components/schemas/geography-condition-field'
+        pickup_v2:
+          description: shipment.pickup country state city area condition
+          allOf:
+            - $ref: '#/components/schemas/geography-condition-field'
+        volumetric_weight:
+          description: shipment.parcels volumetric weight is inside range
+          allOf:
+            - $ref: '#/components/schemas/number-area-condition-field'
+        gross_weight:
+          description: shipment.parcels gross weight is inside range
+          allOf:
+            - $ref: '#/components/schemas/number-area-condition-field'
+        chargeable_weight:
+          description: shipment.parcels chargeable (gross or volumetric which higher) weight is inside range
+          allOf:
+            - $ref: '#/components/schemas/number-area-condition-field'
+        parcel_count:
+          description: shipment.parcels items count is inside range
+          allOf:
+            - $ref: '#/components/schemas/number-area-condition-field'
+        custom_conditions:
+          description: shipment.custom_attributes matches condition
+          allOf:
+            - $ref: '#/components/schemas/custom-attributes-condition-field'
+        order_value_min:
+          description: shipment.payment.total_amount not less. Use -1 value for infinite
+          type: number
+        order_value_max:
+          description: shipment.payment.total_amount not more. Use -1 value for infinite
+          type: number
+        dangerous_goods:
+          description: shipment.[items].dangerous_goods is any item matches
+          type: boolean
+        start_time:
+          description: Time range when rule applies
+          type: number
+        end_time:
+          description: Time range when rule applies
+          type: number
+        days:
+          description: Days when rule applies
+          allOf:
+            - $ref: '#/components/schemas/days-field'
+        customer_address_verified:
+          description: Customer is verified or not
+          type: boolean
+      required:
+        - rule_name
+        - carrier_accounts
+        - sequence
+        - status
+        - order_value_min
+        - order_value_max
+    service-level-rule-request:
+      title: Service Level Rule Request
+      type: object
+      properties:
+        rule_name:
+          type: string
+        config_type:
+          type: string
+          enum:
+            - FULFILLMENT
+            - SHIPPING
+            - DELIVERY
+            - PROMISED
+        carrier_ids:
+          description: shipment.source.source_type matches condition
+          allOf:
+            - $ref: '#/components/schemas/string-condition-field'
+        sequence:
+          type: number
+          description: Sequence number used for rules prioritisation (lower is more important)
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/status-field'
+        source_type:
+          description: shipment.source.source_type matches condition
+          allOf:
+            - $ref: '#/components/schemas/string-condition-field'
+        delivery_type:
+          description: shipment.delivery.delivery_type matches condition
+          allOf:
+            - $ref: '#/components/schemas/string-condition-field'
+        order_type:
+          description: shipment.order_type matches condition
+          allOf:
+            - $ref: '#/components/schemas/string-condition-field'
+        merchants:
+          description: shipment.merchant matches condition
+          allOf:
+            - $ref: '#/components/schemas/string-condition-field'
+        pickup_partner_location_ids:
+          description: shipment.pickup.partner_location_id matches condition
+          allOf:
+            - $ref: '#/components/schemas/string-condition-field'
+        dropoff_partner_location_ids:
+          description: shipment.dropoff.partner_location_id matches condition
+          allOf:
+            - $ref: '#/components/schemas/string-condition-field'
+        dropoff_v2:
+          description: shipment.dropoff country state city area condition
+          allOf:
+            - $ref: '#/components/schemas/geography-condition-field'
+        pickup_v2:
+          description: shipment.pickup country state city area condition
+          allOf:
+            - $ref: '#/components/schemas/geography-condition-field'
+        volumetric_weight:
+          description: shipment.parcels volumetric weight is inside range
+          allOf:
+            - $ref: '#/components/schemas/number-area-condition-field'
+        gross_weight:
+          description: shipment.parcels gross weight is inside range
+          allOf:
+            - $ref: '#/components/schemas/number-area-condition-field'
+        custom_conditions:
+          description: shipment.custom_attributes matches condition
+          allOf:
+            - $ref: '#/components/schemas/custom-attributes-condition-field'
+        start_time:
+          description: Time range when rule applies
+          type: number
+        end_time:
+          description: Time range when rule applies
+          type: number
+        days:
+          description: Days when rule applies
+          allOf:
+            - $ref: '#/components/schemas/days-field'
+      required:
+        - rule_name
+        - carrier_accounts
+        - sequence
+        - status
+    automation-rule-response:
+      title: Automation Rule Response
+      type: object
+      properties:
+        tenant:
+          type: string
+        rule_id:
+          type: string
+        rule_set_id:
+          type: string
+        rule_name:
+          type: string
+        carrier_accounts:
+          type: array
+          items:
+            type: object
+            properties:
+              carrier_account_id:
+                type: string
+        carrier_choice:
+          type: string
+          enum:
+            - CHEAPEST_CARRIER
+        sequence:
+          type: number
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/status-field'
+        source_type:
+          $ref: '#/components/schemas/string-condition-field'
+        payment_type:
+          $ref: '#/components/schemas/string-condition-field'
+        delivery_type:
+          $ref: '#/components/schemas/string-condition-field'
+        order_type:
+          $ref: '#/components/schemas/string-condition-field'
+        merchant:
+          $ref: '#/components/schemas/string-condition-field'
+        pickup_partner_location_ids:
+          $ref: '#/components/schemas/string-condition-field'
+        dropoff_partner_location_ids:
+          $ref: '#/components/schemas/string-condition-field'
+        dropoff_v2:
+          $ref: '#/components/schemas/geography-condition-field'
+        pickup_v2:
+          $ref: '#/components/schemas/geography-condition-field'
+        volumetric_weight:
+          $ref: '#/components/schemas/number-area-condition-field'
+        gross_weight:
+          $ref: '#/components/schemas/number-area-condition-field'
+        chargeable_weight:
+          $ref: '#/components/schemas/number-area-condition-field'
+        parcel_count:
+          $ref: '#/components/schemas/number-area-condition-field'
+        custom_conditions:
+          $ref: '#/components/schemas/custom-attributes-condition-field'
+        order_value_min:
+          type: number
+        order_value_max:
+          type: number
+        dangerous_goods:
+          type: boolean
+        start_time:
+          type: number
+        end_time:
+          type: number
+        days:
+          $ref: '#/components/schemas/days-field'
+        customer_address_verified:
+          type: boolean
+        creation_date:
+          type: string
+          format: date-time
+        update_date:
+          type: string
+          format: date-time
+    service-level-rule-response:
+      title: Service Level Rule Response
+      type: object
+      properties:
+        tenant:
+          type: string
+        rule_id:
+          type: string
+        rule_set_id:
+          type: string
+        rule_name:
+          type: string
+        sequence:
+          type: number
+        description:
+          type: string
+        config_type:
+          type: string
+          enum:
+            - FULFILLMENT
+            - SHIPPING
+            - DELIVERY
+            - PROMISED
+        status:
+          $ref: '#/components/schemas/status-field'
+        source_type:
+          $ref: '#/components/schemas/string-condition-field'
+        delivery_type:
+          $ref: '#/components/schemas/string-condition-field'
+        carrier_ids:
+          $ref: '#/components/schemas/string-condition-field'
+        order_type:
+          $ref: '#/components/schemas/string-condition-field'
+        merchants:
+          $ref: '#/components/schemas/string-condition-field'
+        pickup_partner_location_ids:
+          $ref: '#/components/schemas/string-condition-field'
+        dropoff_partner_location_ids:
+          $ref: '#/components/schemas/string-condition-field'
+        dropoff_v2:
+          $ref: '#/components/schemas/geography-condition-field'
+        pickup_v2:
+          $ref: '#/components/schemas/geography-condition-field'
+        volumetric_weight:
+          $ref: '#/components/schemas/number-area-condition-field'
+        gross_weight:
+          $ref: '#/components/schemas/number-area-condition-field'
+        custom_conditions:
+          $ref: '#/components/schemas/custom-attributes-condition-field'
+        start_time:
+          type: number
+        end_time:
+          type: number
+        days:
+          $ref: '#/components/schemas/days-field'
+        creation_date:
+          type: string
+          format: date-time
+        update_date:
+          type: string
+          format: date-time
+    status-field:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+        - DELETED
+    days-field:
+      type: array
+      items:
+        type: string
+        enum:
+          - MONDAY
+          - TUESDAY
+          - WEDNESDAY
+          - THURSDAY
+          - FRIDAY
+          - SATURDAY
+          - SUNDAY
+    string-condition-field:
+      type: object
+      properties:
+        operator:
+          type: string
+          enum:
+            - INCLUSION
+            - EXCLUSION
+        value:
+          type: array
+          items:
+            type: string
+    number-area-condition-field:
+      type: object
+      properties:
+        min_value:
+          type: number
+        max_value:
+          type: number
+    custom-attributes-condition-field:
+      type: object
+      properties:
+        operator:
+          type: string
+          enum:
+            - INCLUSION
+            - EXCLUSION
+        value:
+          type: array
+          items:
+            type: object
+            properties:
+              attribute_name:
+                type: string
+              operation:
+                type: string
+                enum:
+                  - CONTAINS
+              values:
+                type: array
+                items:
+                  type: string
+    geography-condition-field:
+      type: object
+      properties:
+        operator:
+          type: string
+          enum:
+            - INCLUSION
+            - EXCLUSION
+        value:
+          type: array
+          items:
+            type: object
+            properties:
+              country:
+                type: string
+                description: ISO2 country code
+              state_cities:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    state:
+                      type: string
+                    city_areas:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          city:
+                            type: string
+                          areas:
+                            type: array
+                            items:
+                              type: string
+    sequences-request:
+      title: Update Rules Sequences
+      type: array
+      items:
+        type: object
+        properties:
+          rule_id:
+            type: string
+          sequence:
+            type: number
+      required:
+        - rule_id
+        - sequence
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.carriyo.com/oauth/token'
+          scopes: {}

@@ -1,0 +1,23 @@
+version: '3'
+
+includes:
+  test:
+    taskfile: ./taskfiles/Tests.yml
+
+tasks:
+  devenv:
+    desc: 'Open a new terminal with the env preset from pulumi esc'
+    cmds:
+      - esc run wheniwork/prod -i -- $SHELL
+
+  generate: &generate
+    desc: 'Generate the code'
+    sources: # only run the generate command when these files change
+      - 'spec/**/*.yml'
+    cmds:
+      - go generate ./...
+
+  generate-watch:
+    <<: *generate
+    desc: 'Generate the code in watch mode'
+    watch: true
