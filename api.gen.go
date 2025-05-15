@@ -2129,6 +2129,9 @@ type ListAttrbutesParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // CreateAttributeParams defines parameters for CreateAttribute.
@@ -2136,6 +2139,9 @@ type CreateAttributeParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // DeleteAttributeParams defines parameters for DeleteAttribute.
@@ -2143,6 +2149,9 @@ type DeleteAttributeParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // GetAttributeParams defines parameters for GetAttribute.
@@ -2150,6 +2159,9 @@ type GetAttributeParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateAttributeParams defines parameters for UpdateAttribute.
@@ -2157,6 +2169,9 @@ type UpdateAttributeParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // ListAutomationRulesetsParams defines parameters for ListAutomationRulesets.
@@ -2169,6 +2184,9 @@ type ListAutomationRulesetsParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // CreateAutomationRulesetAndRulesParams defines parameters for CreateAutomationRulesetAndRules.
@@ -2176,6 +2194,9 @@ type CreateAutomationRulesetAndRulesParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // DeleteAutomationRulesetParams defines parameters for DeleteAutomationRuleset.
@@ -2183,6 +2204,9 @@ type DeleteAutomationRulesetParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // GetAutomationRulesetParams defines parameters for GetAutomationRuleset.
@@ -2190,6 +2214,9 @@ type GetAutomationRulesetParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // PatchAutomationRulesetParams defines parameters for PatchAutomationRuleset.
@@ -2197,6 +2224,9 @@ type PatchAutomationRulesetParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateAutomationRulesetAndRulesParams defines parameters for UpdateAutomationRulesetAndRules.
@@ -2204,6 +2234,9 @@ type UpdateAutomationRulesetAndRulesParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // ListAutomationRulesParams defines parameters for ListAutomationRules.
@@ -2211,6 +2244,9 @@ type ListAutomationRulesParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // CreateAutomationRulesParams defines parameters for CreateAutomationRules.
@@ -2218,6 +2254,9 @@ type CreateAutomationRulesParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateAutomationRulesSequenceParams defines parameters for UpdateAutomationRulesSequence.
@@ -2225,6 +2264,9 @@ type UpdateAutomationRulesSequenceParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // DeleteAutomationRuleParams defines parameters for DeleteAutomationRule.
@@ -2232,6 +2274,9 @@ type DeleteAutomationRuleParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // GetAutomationRuleParams defines parameters for GetAutomationRule.
@@ -2239,6 +2284,9 @@ type GetAutomationRuleParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateAutomationRuleParams defines parameters for UpdateAutomationRule.
@@ -2246,6 +2294,9 @@ type UpdateAutomationRuleParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // ListCarrierAccountsParams defines parameters for ListCarrierAccounts.
@@ -2254,6 +2305,9 @@ type ListCarrierAccountsParams struct {
 	XApiKey     *string                          `json:"x-api-key,omitempty"`
 	TenantId    *string                          `json:"tenant-id,omitempty"`
 	ContentType *string                          `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // ListCarrierAccountsParamsStatus defines parameters for ListCarrierAccounts.
@@ -2264,6 +2318,9 @@ type CreateCarrierAccountParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // DeleteCarrierAccountParams defines parameters for DeleteCarrierAccount.
@@ -2271,6 +2328,9 @@ type DeleteCarrierAccountParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // GetCarrierAccountParams defines parameters for GetCarrierAccount.
@@ -2278,6 +2338,9 @@ type GetCarrierAccountParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateCarrierAccountParams defines parameters for UpdateCarrierAccount.
@@ -2285,12 +2348,18 @@ type UpdateCarrierAccountParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // GetShippingRatesParams defines parameters for GetShippingRates.
 type GetShippingRatesParams struct {
 	XApiKey  string `json:"x-api-key"`
 	TenantId string `json:"tenant-id"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // ListManifestsParams defines parameters for ListManifests.
@@ -2298,6 +2367,9 @@ type ListManifestsParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // CreateManifestParams defines parameters for CreateManifest.
@@ -2305,6 +2377,9 @@ type CreateManifestParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // DeleteManifestParams defines parameters for DeleteManifest.
@@ -2312,6 +2387,9 @@ type DeleteManifestParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // GetManifestParams defines parameters for GetManifest.
@@ -2319,6 +2397,9 @@ type GetManifestParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // CancelManifestParams defines parameters for CancelManifest.
@@ -2326,6 +2407,9 @@ type CancelManifestParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // RetryManifestParams defines parameters for RetryManifest.
@@ -2333,6 +2417,9 @@ type RetryManifestParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // ShipManifestParams defines parameters for ShipManifest.
@@ -2340,6 +2427,18 @@ type ShipManifestParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
+}
+
+// GetAccessTokenJSONBody defines parameters for GetAccessToken.
+type GetAccessTokenJSONBody struct {
+	// ClientId The client ID generated in the Carriyo Dashboard
+	ClientId string `json:"client_id"`
+
+	// ClientSecret The client secret generated in the Carriyo Dashboard
+	ClientSecret string `json:"client_secret"`
 }
 
 // ListServiceLevelRulesetsParams defines parameters for ListServiceLevelRulesets.
@@ -2352,6 +2451,9 @@ type ListServiceLevelRulesetsParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // CreateServiceLevelRulesetAndRulesParams defines parameters for CreateServiceLevelRulesetAndRules.
@@ -2359,6 +2461,9 @@ type CreateServiceLevelRulesetAndRulesParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateServiceLevelRulesSequenceParams defines parameters for UpdateServiceLevelRulesSequence.
@@ -2366,6 +2471,9 @@ type UpdateServiceLevelRulesSequenceParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // DeleteServiceLevelRuleParams defines parameters for DeleteServiceLevelRule.
@@ -2373,6 +2481,9 @@ type DeleteServiceLevelRuleParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // GetServiceLevelRuleParams defines parameters for GetServiceLevelRule.
@@ -2380,6 +2491,9 @@ type GetServiceLevelRuleParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateServiceLevelRuleParams defines parameters for UpdateServiceLevelRule.
@@ -2387,6 +2501,9 @@ type UpdateServiceLevelRuleParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // DeleteServiceLevelRulesetParams defines parameters for DeleteServiceLevelRuleset.
@@ -2394,6 +2511,9 @@ type DeleteServiceLevelRulesetParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // GetServiceLevelRulesetParams defines parameters for GetServiceLevelRuleset.
@@ -2401,6 +2521,9 @@ type GetServiceLevelRulesetParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // PatchServiceLevelRulesetParams defines parameters for PatchServiceLevelRuleset.
@@ -2408,6 +2531,9 @@ type PatchServiceLevelRulesetParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateServiceLevelRulesetAndRulesParams defines parameters for UpdateServiceLevelRulesetAndRules.
@@ -2415,6 +2541,9 @@ type UpdateServiceLevelRulesetAndRulesParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // ListServiceLevelRulesParams defines parameters for ListServiceLevelRules.
@@ -2422,6 +2551,9 @@ type ListServiceLevelRulesParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // CreateServiceLevelRulesParams defines parameters for CreateServiceLevelRules.
@@ -2429,6 +2561,9 @@ type CreateServiceLevelRulesParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // ListShipmentsParams defines parameters for ListShipments.
@@ -2464,6 +2599,9 @@ type ListShipmentsParams struct {
 	PageSize *string `form:"page_size,omitempty" json:"page_size,omitempty"`
 	XApiKey  string  `json:"x-api-key"`
 	TenantId string  `json:"tenant-id"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // CreateShipmentJSONBody defines parameters for CreateShipment.
@@ -2478,6 +2616,9 @@ type CreateShipmentParams struct {
 	XApiKey     string `json:"x-api-key"`
 	TenantId    string `json:"tenant-id"`
 	ContentType string `json:"Content-Type"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // GetBulkStatusParams defines parameters for GetBulkStatus.
@@ -2485,12 +2626,18 @@ type GetBulkStatusParams struct {
 	ShipmentId *[]string `form:"shipment_id,omitempty" json:"shipment_id,omitempty"`
 	XApiKey    *string   `json:"x-api-key,omitempty"`
 	TenantId   *string   `json:"tenant-id,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // GetShipmentParams defines parameters for GetShipment.
 type GetShipmentParams struct {
 	XApiKey  string `json:"x-api-key"`
 	TenantId string `json:"tenant-id"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateShipmentPatchParams defines parameters for UpdateShipmentPatch.
@@ -2498,6 +2645,9 @@ type UpdateShipmentPatchParams struct {
 	XApiKey     string `json:"x-api-key"`
 	TenantId    string `json:"tenant-id"`
 	ContentType string `json:"Content-Type"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateShipmentParams defines parameters for UpdateShipment.
@@ -2505,6 +2655,9 @@ type UpdateShipmentParams struct {
 	XApiKey     string `json:"x-api-key"`
 	TenantId    string `json:"tenant-id"`
 	ContentType string `json:"Content-Type"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // CancelShipmentJSONBody defines parameters for CancelShipment.
@@ -2517,9 +2670,10 @@ type CancelShipmentJSONBody struct {
 
 // CancelShipmentParams defines parameters for CancelShipment.
 type CancelShipmentParams struct {
-	XApiKey     *string `json:"x-api-key,omitempty"`
-	TenantId    *string `json:"tenant-id,omitempty"`
-	ContentType *string `json:"Content-Type,omitempty"`
+	XApiKey       *string `json:"x-api-key,omitempty"`
+	TenantId      *string `json:"tenant-id,omitempty"`
+	ContentType   *string `json:"Content-Type,omitempty"`
+	Authorization string  `json:"Authorization"`
 }
 
 // ConfirmShipmentParams defines parameters for ConfirmShipment.
@@ -2527,18 +2681,27 @@ type ConfirmShipmentParams struct {
 	XApiKey     string `json:"x-api-key"`
 	TenantId    string `json:"tenant-id"`
 	ContentType string `json:"Content-Type"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // EstimateShippingCostForShipmentParams defines parameters for EstimateShippingCostForShipment.
 type EstimateShippingCostForShipmentParams struct {
 	XApiKey  string `json:"x-api-key"`
 	TenantId string `json:"tenant-id"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // RefreshLabelParams defines parameters for RefreshLabel.
 type RefreshLabelParams struct {
 	XApiKey  string `json:"x-api-key"`
 	TenantId string `json:"tenant-id"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateParcelsParams defines parameters for UpdateParcels.
@@ -2546,12 +2709,18 @@ type UpdateParcelsParams struct {
 	XApiKey     string `json:"x-api-key"`
 	TenantId    string `json:"tenant-id"`
 	ContentType string `json:"Content-Type"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // ReadyToShipParams defines parameters for ReadyToShip.
 type ReadyToShipParams struct {
 	XApiKey  string `json:"x-api-key"`
 	TenantId string `json:"tenant-id"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // ReassignShipmentJSONBody defines parameters for ReassignShipment.
@@ -2565,6 +2734,9 @@ type ReassignShipmentParams struct {
 	XApiKey     string `json:"x-api-key"`
 	TenantId    string `json:"tenant-id"`
 	ContentType string `json:"Content-Type"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // ReprocessShipmentParams defines parameters for ReprocessShipment.
@@ -2572,6 +2744,9 @@ type ReprocessShipmentParams struct {
 	XApiKey     string `json:"x-api-key"`
 	TenantId    string `json:"tenant-id"`
 	ContentType string `json:"Content-Type"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateCollectionScheduleParams defines parameters for UpdateCollectionSchedule.
@@ -2579,6 +2754,9 @@ type UpdateCollectionScheduleParams struct {
 	XApiKey     string `json:"x-api-key"`
 	TenantId    string `json:"tenant-id"`
 	ContentType string `json:"Content-Type"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateDeliveryPromiseParams defines parameters for UpdateDeliveryPromise.
@@ -2586,6 +2764,9 @@ type UpdateDeliveryPromiseParams struct {
 	XApiKey     string `json:"x-api-key"`
 	TenantId    string `json:"tenant-id"`
 	ContentType string `json:"Content-Type"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateDeliveryScheduleParams defines parameters for UpdateDeliverySchedule.
@@ -2593,6 +2774,9 @@ type UpdateDeliveryScheduleParams struct {
 	XApiKey     string `json:"x-api-key"`
 	TenantId    string `json:"tenant-id"`
 	ContentType string `json:"Content-Type"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // UpdateStatusJSONBody defines parameters for UpdateStatus.
@@ -2606,6 +2790,9 @@ type UpdateStatusParams struct {
 	XApiKey     *string `json:"x-api-key,omitempty"`
 	TenantId    *string `json:"tenant-id,omitempty"`
 	ContentType *string `json:"Content-Type,omitempty"`
+
+	// Authorization OAuth2 Bearer Token
+	Authorization string `json:"Authorization"`
 }
 
 // CreateAttributeJSONRequestBody defines body for CreateAttribute for application/json ContentType.
@@ -2643,6 +2830,9 @@ type GetShippingRatesJSONRequestBody = ShippingRatesRequest
 
 // CreateManifestJSONRequestBody defines body for CreateManifest for application/json ContentType.
 type CreateManifestJSONRequestBody = ManifestRequest
+
+// GetAccessTokenJSONRequestBody defines body for GetAccessToken for application/json ContentType.
+type GetAccessTokenJSONRequestBody GetAccessTokenJSONBody
 
 // CreateServiceLevelRulesetAndRulesJSONRequestBody defines body for CreateServiceLevelRulesetAndRules for application/json ContentType.
 type CreateServiceLevelRulesetAndRulesJSONRequestBody = ServiceLevelRulesetWithRulesRequest
@@ -3384,6 +3574,11 @@ type ClientInterface interface {
 	// ShipManifest request
 	ShipManifest(ctx context.Context, manifestId string, params *ShipManifestParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetAccessTokenWithBody request with any body
+	GetAccessTokenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	GetAccessToken(ctx context.Context, body GetAccessTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListServiceLevelRulesets request
 	ListServiceLevelRulesets(ctx context.Context, params *ListServiceLevelRulesetsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -4007,6 +4202,30 @@ func (c *Client) RetryManifest(ctx context.Context, manifestId string, params *R
 
 func (c *Client) ShipManifest(ctx context.Context, manifestId string, params *ShipManifestParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewShipManifestRequest(c.Server, manifestId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAccessTokenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAccessTokenRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAccessToken(ctx context.Context, body GetAccessTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAccessTokenRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4664,6 +4883,15 @@ func NewListAttrbutesRequest(server string, params *ListAttrbutesParams) (*http.
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -4741,6 +4969,15 @@ func NewCreateAttributeRequestWithBody(server string, params *CreateAttributePar
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -4812,6 +5049,15 @@ func NewDeleteAttributeRequest(server string, attributeId string, params *Delete
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -4882,6 +5128,15 @@ func NewGetAttributeRequest(server string, attributeId string, params *GetAttrib
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -4966,6 +5221,15 @@ func NewUpdateAttributeRequestWithBody(server string, attributeId string, params
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -5069,6 +5333,15 @@ func NewListAutomationRulesetsRequest(server string, params *ListAutomationRules
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -5146,6 +5419,15 @@ func NewCreateAutomationRulesetAndRulesRequestWithBody(server string, params *Cr
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -5217,6 +5499,15 @@ func NewDeleteAutomationRulesetRequest(server string, automationRulesetId string
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -5287,6 +5578,15 @@ func NewGetAutomationRulesetRequest(server string, automationRulesetId string, p
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -5372,6 +5672,15 @@ func NewPatchAutomationRulesetRequestWithBody(server string, automationRulesetId
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -5456,6 +5765,15 @@ func NewUpdateAutomationRulesetAndRulesRequestWithBody(server string, automation
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -5526,6 +5844,15 @@ func NewListAutomationRulesRequest(server string, automationRulesetId string, pa
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -5611,6 +5938,15 @@ func NewCreateAutomationRulesRequestWithBody(server string, automationRulesetId 
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -5695,6 +6031,15 @@ func NewUpdateAutomationRulesSequenceRequestWithBody(server string, rulesetId st
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -5773,6 +6118,15 @@ func NewDeleteAutomationRuleRequest(server string, rulesetId string, automationR
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -5850,6 +6204,15 @@ func NewGetAutomationRuleRequest(server string, rulesetId string, automationRule
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -5942,6 +6305,15 @@ func NewUpdateAutomationRuleRequestWithBody(server string, rulesetId string, aut
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -6028,6 +6400,15 @@ func NewListCarrierAccountsRequest(server string, params *ListCarrierAccountsPar
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -6105,6 +6486,15 @@ func NewCreateCarrierAccountRequestWithBody(server string, params *CreateCarrier
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -6176,6 +6566,15 @@ func NewDeleteCarrierAccountRequest(server string, carrierAccountId string, para
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -6246,6 +6645,15 @@ func NewGetCarrierAccountRequest(server string, carrierAccountId string, params 
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -6331,6 +6739,15 @@ func NewUpdateCarrierAccountRequestWithBody(server string, carrierAccountId stri
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -6392,6 +6809,15 @@ func NewGetShippingRatesRequestWithBody(server string, params *GetShippingRatesP
 		}
 
 		req.Header.Set("tenant-id", headerParam1)
+
+		var headerParam2 string
+
+		headerParam2, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam2)
 
 	}
 
@@ -6456,6 +6882,15 @@ func NewListManifestsRequest(server string, params *ListManifestsParams) (*http.
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -6534,6 +6969,15 @@ func NewCreateManifestRequestWithBody(server string, params *CreateManifestParam
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -6604,6 +7048,15 @@ func NewDeleteManifestRequest(server string, manifestId string, params *DeleteMa
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -6676,6 +7129,15 @@ func NewGetManifestRequest(server string, manifestId string, params *GetManifest
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -6746,6 +7208,15 @@ func NewCancelManifestRequest(server string, manifestId string, params *CancelMa
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -6818,6 +7289,15 @@ func NewRetryManifestRequest(server string, manifestId string, params *RetryMani
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -6889,7 +7369,56 @@ func NewShipManifestRequest(server string, manifestId string, params *ShipManife
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
+
+	return req, nil
+}
+
+// NewGetAccessTokenRequest calls the generic GetAccessToken builder with application/json body
+func NewGetAccessTokenRequest(server string, body GetAccessTokenJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewGetAccessTokenRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewGetAccessTokenRequestWithBody generates requests for GetAccessToken with any type of body
+func NewGetAccessTokenRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/oauth/token")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -6991,6 +7520,15 @@ func NewListServiceLevelRulesetsRequest(server string, params *ListServiceLevelR
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -7067,6 +7605,15 @@ func NewCreateServiceLevelRulesetAndRulesRequestWithBody(server string, params *
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -7152,6 +7699,15 @@ func NewUpdateServiceLevelRulesSequenceRequestWithBody(server string, rulesetId 
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -7230,6 +7786,15 @@ func NewDeleteServiceLevelRuleRequest(server string, rulesetId string, serviceLe
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -7307,6 +7872,15 @@ func NewGetServiceLevelRuleRequest(server string, rulesetId string, serviceLevel
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -7399,6 +7973,15 @@ func NewUpdateServiceLevelRuleRequestWithBody(server string, rulesetId string, s
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -7470,6 +8053,15 @@ func NewDeleteServiceLevelRulesetRequest(server string, serviceLevelRulesetId st
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -7540,6 +8132,15 @@ func NewGetServiceLevelRulesetRequest(server string, serviceLevelRulesetId strin
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -7625,6 +8226,15 @@ func NewPatchServiceLevelRulesetRequestWithBody(server string, serviceLevelRules
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -7709,6 +8319,15 @@ func NewUpdateServiceLevelRulesetAndRulesRequestWithBody(server string, serviceL
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -7779,6 +8398,15 @@ func NewListServiceLevelRulesRequest(server string, serviceLevelRulesetId string
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -7863,6 +8491,15 @@ func NewCreateServiceLevelRulesRequestWithBody(server string, serviceLevelRulese
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -8079,6 +8716,15 @@ func NewListShipmentsRequest(server string, params *ListShipmentsParams) (*http.
 
 		req.Header.Set("tenant-id", headerParam1)
 
+		var headerParam2 string
+
+		headerParam2, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam2)
+
 	}
 
 	return req, nil
@@ -8172,6 +8818,15 @@ func NewCreateShipmentRequestWithBody(server string, params *CreateShipmentParam
 
 		req.Header.Set("Content-Type", headerParam2)
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -8247,6 +8902,15 @@ func NewGetBulkStatusRequest(server string, params *GetBulkStatusParams) (*http.
 			req.Header.Set("tenant-id", headerParam1)
 		}
 
+		var headerParam2 string
+
+		headerParam2, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam2)
+
 	}
 
 	return req, nil
@@ -8302,6 +8966,15 @@ func NewGetShipmentRequest(server string, shipmentId string, params *GetShipment
 		}
 
 		req.Header.Set("tenant-id", headerParam1)
+
+		var headerParam2 string
+
+		headerParam2, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam2)
 
 	}
 
@@ -8381,6 +9054,15 @@ func NewUpdateShipmentPatchRequestWithBody(server string, shipmentId string, par
 
 		req.Header.Set("Content-Type", headerParam2)
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -8458,6 +9140,15 @@ func NewUpdateShipmentRequestWithBody(server string, shipmentId string, params *
 		}
 
 		req.Header.Set("Content-Type", headerParam2)
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -8543,6 +9234,15 @@ func NewCancelShipmentRequestWithBody(server string, shipmentId string, params *
 			req.Header.Set("Content-Type", headerParam2)
 		}
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -8621,6 +9321,15 @@ func NewConfirmShipmentRequestWithBody(server string, shipmentId string, params 
 
 		req.Header.Set("Content-Type", headerParam2)
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -8677,6 +9386,15 @@ func NewEstimateShippingCostForShipmentRequest(server string, shipmentId string,
 
 		req.Header.Set("tenant-id", headerParam1)
 
+		var headerParam2 string
+
+		headerParam2, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam2)
+
 	}
 
 	return req, nil
@@ -8732,6 +9450,15 @@ func NewRefreshLabelRequest(server string, shipmentId string, params *RefreshLab
 		}
 
 		req.Header.Set("tenant-id", headerParam1)
+
+		var headerParam2 string
+
+		headerParam2, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam2)
 
 	}
 
@@ -8811,6 +9538,15 @@ func NewUpdateParcelsRequestWithBody(server string, shipmentId string, params *U
 
 		req.Header.Set("Content-Type", headerParam2)
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -8879,6 +9615,15 @@ func NewReadyToShipRequestWithBody(server string, shipmentId string, params *Rea
 		}
 
 		req.Header.Set("tenant-id", headerParam1)
+
+		var headerParam2 string
+
+		headerParam2, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam2)
 
 	}
 
@@ -8958,6 +9703,15 @@ func NewReassignShipmentRequestWithBody(server string, shipmentId string, params
 
 		req.Header.Set("Content-Type", headerParam2)
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -9035,6 +9789,15 @@ func NewReprocessShipmentRequestWithBody(server string, shipmentId string, param
 		}
 
 		req.Header.Set("Content-Type", headerParam2)
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -9114,6 +9877,15 @@ func NewUpdateCollectionScheduleRequestWithBody(server string, shipmentId string
 
 		req.Header.Set("Content-Type", headerParam2)
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -9192,6 +9964,15 @@ func NewUpdateDeliveryPromiseRequestWithBody(server string, shipmentId string, p
 
 		req.Header.Set("Content-Type", headerParam2)
 
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
+
 	}
 
 	return req, nil
@@ -9269,6 +10050,15 @@ func NewUpdateDeliveryScheduleRequestWithBody(server string, shipmentId string, 
 		}
 
 		req.Header.Set("Content-Type", headerParam2)
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -9353,6 +10143,15 @@ func NewUpdateStatusRequestWithBody(server string, shipmentId string, params *Up
 
 			req.Header.Set("Content-Type", headerParam2)
 		}
+
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "Authorization", runtime.ParamLocationHeader, params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", headerParam3)
 
 	}
 
@@ -9515,6 +10314,11 @@ type ClientWithResponsesInterface interface {
 
 	// ShipManifestWithResponse request
 	ShipManifestWithResponse(ctx context.Context, manifestId string, params *ShipManifestParams, reqEditors ...RequestEditorFn) (*ShipManifestResponse, error)
+
+	// GetAccessTokenWithBodyWithResponse request with any body
+	GetAccessTokenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetAccessTokenResponse, error)
+
+	GetAccessTokenWithResponse(ctx context.Context, body GetAccessTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*GetAccessTokenResponse, error)
 
 	// ListServiceLevelRulesetsWithResponse request
 	ListServiceLevelRulesetsWithResponse(ctx context.Context, params *ListServiceLevelRulesetsParams, reqEditors ...RequestEditorFn) (*ListServiceLevelRulesetsResponse, error)
@@ -10299,6 +11103,47 @@ func (r ShipManifestResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r ShipManifestResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAccessTokenResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// AccessToken The OAuth access token to be used for API calls
+		AccessToken string `json:"access_token"`
+
+		// ExpiresIn Expiry time in seconds
+		ExpiresIn float32 `json:"expires_in"`
+
+		// Scope The permissions granted to the oauth token
+		Scope string `json:"scope"`
+
+		// TokenType Token type - Bearer
+		TokenType string `json:"token_type"`
+	}
+	JSON401 *struct {
+		// Error The type of error
+		Error string `json:"error"`
+
+		// ErrorDescription The error description
+		ErrorDescription string `json:"error_description"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAccessTokenResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAccessTokenResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -11358,6 +12203,23 @@ func (c *ClientWithResponses) ShipManifestWithResponse(ctx context.Context, mani
 		return nil, err
 	}
 	return ParseShipManifestResponse(rsp)
+}
+
+// GetAccessTokenWithBodyWithResponse request with arbitrary body returning *GetAccessTokenResponse
+func (c *ClientWithResponses) GetAccessTokenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetAccessTokenResponse, error) {
+	rsp, err := c.GetAccessTokenWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAccessTokenResponse(rsp)
+}
+
+func (c *ClientWithResponses) GetAccessTokenWithResponse(ctx context.Context, body GetAccessTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*GetAccessTokenResponse, error) {
+	rsp, err := c.GetAccessToken(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAccessTokenResponse(rsp)
 }
 
 // ListServiceLevelRulesetsWithResponse request returning *ListServiceLevelRulesetsResponse
@@ -12556,6 +13418,57 @@ func ParseShipManifestResponse(rsp *http.Response) (*ShipManifestResponse, error
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAccessTokenResponse parses an HTTP response from a GetAccessTokenWithResponse call
+func ParseGetAccessTokenResponse(rsp *http.Response) (*GetAccessTokenResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAccessTokenResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// AccessToken The OAuth access token to be used for API calls
+			AccessToken string `json:"access_token"`
+
+			// ExpiresIn Expiry time in seconds
+			ExpiresIn float32 `json:"expires_in"`
+
+			// Scope The permissions granted to the oauth token
+			Scope string `json:"scope"`
+
+			// TokenType Token type - Bearer
+			TokenType string `json:"token_type"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest struct {
+			// Error The type of error
+			Error string `json:"error"`
+
+			// ErrorDescription The error description
+			ErrorDescription string `json:"error_description"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	}
 

@@ -14,6 +14,8 @@ servers:
 security:
   - OAuth2: []
 tags:
+  - name: authentication
+    description: Authentication operations
   - name: shipments
   - name: carrier-accounts
   - name: manifests
@@ -21,6 +23,93 @@ tags:
   - name: automation-rules
   - name: service-levels
 paths:
+  '/oauth/token':
+    post:
+      tags:
+        - authentication
+      summary: Get Access Token
+      description: |-
+        This authentication endpoint takes the client_id and client_secret and returns an access token.
+        
+        The access token returned by this endpoint should be used as a bearer token in the 'Authorization' header for any subsequent Carriyo API endpoints.
+        
+        The access token should be cached on the client side until its expiry.
+      operationId: get-access-token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - client_id
+                - client_secret
+              properties:
+                client_id:
+                  type: string
+                  description: The client ID generated in the Carriyo Dashboard
+                client_secret:
+                  type: string
+                  description: The client secret generated in the Carriyo Dashboard
+            examples:
+              Get Access Token:
+                value:
+                  client_id: "<YOUR-CLIENT-ID>"
+                  client_secret: "<YOUR-CLIENT-SECRET>"
+        required: true
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - access_token
+                  - scope
+                  - expires_in
+                  - token_type
+                properties:
+                  access_token:
+                    type: string
+                    description: The OAuth access token to be used for API calls
+                  scope:
+                    type: string
+                    description: The permissions granted to the oauth token
+                  expires_in:
+                    type: number
+                    description: Expiry time in seconds
+                  token_type:
+                    type: string
+                    description: Token type - Bearer
+              examples:
+                Success Response:
+                  value:
+                    access_token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL"
+                    scope: "tenant:TEST merchant:ACCOUNT read:shipments create:shipments update:shipments"
+                    expires_in: 86400
+                    token_type: "Bearer"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                  - error_description
+                properties:
+                  error:
+                    type: string
+                    description: The type of error
+                  error_description:
+                    type: string
+                    description: The error description
+              examples:
+                Error Response:
+                  value:
+                    error: "access_denied"
+                    error_description: "Unauthorized"
+      security: []  # No auth required for this endpoint
   '/shipments':
     get:
       tags:
@@ -104,6 +193,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -191,6 +287,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
         - schema:
             type: boolean
           in: query
@@ -664,6 +767,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -717,6 +827,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -803,6 +920,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -897,6 +1021,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -980,6 +1111,13 @@ paths:
           in: header
           schema:
             type: string
+            default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
       requestBody:
         content:
           application/json:
@@ -1057,6 +1195,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -1110,6 +1255,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -1161,6 +1313,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -1205,6 +1364,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -1307,6 +1473,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -1378,6 +1551,13 @@ paths:
           in: header
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -1421,6 +1601,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -1465,6 +1652,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -1512,6 +1706,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -1592,6 +1793,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -1666,6 +1874,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -1702,6 +1917,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           'application/json':
@@ -1747,6 +1969,13 @@ paths:
               - active
               - inactive
               - deleted
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -1786,6 +2015,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           'application/json':
@@ -1828,6 +2064,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -1861,6 +2104,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           'application/json':
@@ -1901,6 +2151,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -1936,6 +2193,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -1966,6 +2230,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           'application/json':
@@ -2007,6 +2278,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2040,6 +2318,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2074,6 +2359,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2108,6 +2400,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2142,6 +2441,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2171,6 +2477,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2201,6 +2514,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           'application/json':
@@ -2242,6 +2562,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2276,6 +2603,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           'application/json':
@@ -2316,6 +2650,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2347,6 +2688,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -2392,6 +2740,13 @@ paths:
           in: query
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2428,6 +2783,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2461,6 +2823,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -2499,6 +2868,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -2537,6 +2913,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2571,6 +2954,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -2611,6 +3001,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2654,6 +3051,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2694,6 +3098,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2734,6 +3145,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -2775,6 +3193,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -2811,6 +3236,13 @@ paths:
           schema:
             type: string
             default: application/json
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -2854,6 +3286,13 @@ paths:
           in: query
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2890,6 +3329,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -2923,6 +3369,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -2961,6 +3414,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -2999,6 +3459,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -3033,6 +3500,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -3073,6 +3547,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -3116,6 +3597,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -3156,6 +3644,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       responses:
         '200':
           description: ''
@@ -3196,6 +3691,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -3237,6 +3739,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            format: Bearer {token}
+          description: OAuth2 Bearer Token
       requestBody:
         content:
           application/json:
@@ -5766,7 +6275,15 @@ components:
   securitySchemes:
     OAuth2:
       type: oauth2
+      description: OAuth 2.0 authorization with Bearer token
       flows:
         clientCredentials:
           tokenUrl: 'https://api.carriyo.com/oauth/token'
           scopes: {}
+    AuthorizationHeader:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+      description: OAuth 2.0 Bearer token (format - 'Bearer {token}')
