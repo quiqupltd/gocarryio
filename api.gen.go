@@ -19,7 +19,8 @@ import (
 )
 
 const (
-	OAuth2Scopes = "OAuth2.Scopes"
+	BearerAuthScopes = "bearerAuth.Scopes"
+	Oauth2Scopes     = "oauth2.Scopes"
 )
 
 // Defines values for AttributeRequestAttributeEntityType.
@@ -2466,11 +2467,6 @@ type ListShipmentsParams struct {
 	TenantId string  `json:"tenant-id"`
 }
 
-// CreateShipmentJSONBody defines parameters for CreateShipment.
-type CreateShipmentJSONBody struct {
-	union json.RawMessage
-}
-
 // CreateShipmentParams defines parameters for CreateShipment.
 type CreateShipmentParams struct {
 	// Draft Pass true for draft shipment
@@ -2663,7 +2659,7 @@ type UpdateServiceLevelRulesetAndRulesJSONRequestBody = ServiceLevelRulesetWithR
 type CreateServiceLevelRulesJSONRequestBody = ServiceLevelRuleRequest
 
 // CreateShipmentJSONRequestBody defines body for CreateShipment for application/json ContentType.
-type CreateShipmentJSONRequestBody CreateShipmentJSONBody
+type CreateShipmentJSONRequestBody = ShipmentRequest
 
 // UpdateShipmentPatchJSONRequestBody defines body for UpdateShipmentPatch for application/json ContentType.
 type UpdateShipmentPatchJSONRequestBody = ShipmentDraftRequest

@@ -12,7 +12,8 @@ servers:
   - url: 'https://api.carriyo.com'
   - url: 'https://demo-api.carriyo.com'
 security:
-  - OAuth2: []
+  - bearerAuth: []
+  - oauth2: []
 tags:
   - name: shipments
   - name: carrier-accounts
@@ -113,8 +114,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/shipment-object'
-      security:
-        - OAuth2: []
+
     post:
       tags:
         - shipments
@@ -200,9 +200,7 @@ paths:
         content:
           application/json:
             schema:
-              anyOf:
-                - $ref: '#/components/schemas/shipment-draft-request'
-                - $ref: '#/components/schemas/shipment-request'
+              $ref: '#/components/schemas/shipment-request'
             examples:
               Confirmed Shipment:
                 value:
@@ -635,8 +633,7 @@ paths:
                     timestamp: '2021-08-10T17:34:22.906Z'
                     errors:
                       - Duplicate partner shipment reference
-      security:
-        - OAuth2: []
+
       x-codegen-request-body-name: body
   '/shipments/{shipment_id}':
     get:
@@ -684,8 +681,7 @@ paths:
                     timestamp: '2020-12-07T13:50:11.853Z'
                     errors:
                       - 'No shipment found with the shipment id: KHNI57EYOAICSdf'
-      security:
-        - OAuth2: []
+
     put:
       tags:
         - shipments
@@ -765,8 +761,7 @@ paths:
                     timestamp: '2022-04-07T13:37:09.855Z'
                     errors:
                       - 'Shipment L1OJMRKJEPTNB is not [draft, error].'
-      security:
-        - OAuth2: []
+
       x-codegen-request-body-name: body
     patch:
       tags:
@@ -851,8 +846,7 @@ paths:
                     timestamp: '2022-04-07T13:37:09.855Z'
                     errors:
                       - 'Shipment L1OJMRKJEPTNB is not [draft, error].'
-      security:
-        - OAuth2: []
+
       x-codegen-request-body-name: body
   '/shipments/{shipment_id}/confirm':
     post:
@@ -945,8 +939,7 @@ paths:
                     timestamp: '2022-04-07T13:30:14.500Z'
                     errors:
                       - 'Only draft shipments can be confirmed. Current shipment status: booked.'
-      security:
-        - OAuth2: []
+
       x-codegen-request-body-name: body
   '/shipments/{shipment_id}/cancel':
     post:
@@ -1028,8 +1021,7 @@ paths:
                     timestamp: '2022-03-22T09:29:01.889Z'
                     errors:
                       - "Status change is not allowed from current status: 'shipped' to the new status: 'cancelled'"
-      security:
-        - OAuth2: []
+
       x-codegen-request-body-name: body
   '/shipments/{shipment_id}/label/refresh':
     post:
@@ -1067,8 +1059,7 @@ paths:
                 properties:
                   awb:
                     type: string
-      security:
-        - OAuth2: []
+
   '/shipments/{shipment_id}/reassign':
     post:
       tags:
@@ -1126,8 +1117,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/shipment-object'
-      security:
-        - OAuth2: []
+
       x-codegen-request-body-name: body
   '/shipments/{shipment_id}/reprocess':
     post:
@@ -1218,8 +1208,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/shipment-object'
-      security:
-        - OAuth2: []
+
       x-codegen-request-body-name: body
   '/shipments/{shipment_id}/update-status':
     post:
@@ -1387,8 +1376,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/bulk-shipment-status-response'
-      security:
-        - OAuth2: []
+
   '/shipments/{shipment_id}/parcels':
     put:
       tags:
@@ -1434,8 +1422,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/shipment-object'
-      security:
-        - OAuth2: []
+
       x-codegen-request-body-name: body
   '/shipments/{shipment_id}/update-delivery-promise':
     post:
@@ -1476,8 +1463,7 @@ paths:
         This endpoint allows the merchant to update the promised delivery date after the shipment is created. The promised delivery date can be updated as long as the shipment is not in a final status (delivered, returned or cancelled)
 
         The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
-      security:
-        - OAuth2: []
+
       requestBody:
         content:
           application/json:
@@ -1542,8 +1528,7 @@ paths:
         }
 
         The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
-      security:
-        - OAuth2: []
+
       requestBody:
         content:
           application/json:
@@ -1622,8 +1607,7 @@ paths:
         }
 
         The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
-      security:
-        - OAuth2: []
+
       requestBody:
         content:
           application/json:
@@ -1677,8 +1661,7 @@ paths:
         This endpoint allows the merchant to estimate shipment's cost for a draft shipment before booking the shipment.
 
         The `shipment_id` is used as a path parameter to identify the shipment. Alternatively the merchant provided shipment reference (`partner_shipment_reference`) can also be used instead of the `shipment_id`.
-      security:
-        - OAuth2: []
+
     parameters:
       - schema:
           type: string
@@ -1717,8 +1700,7 @@ paths:
                 $ref: '#/components/schemas/shipping-rates-response'
       description: |-
         This endpoint allows the merchant to get shipping rates for a future shipment.
-      security:
-        - OAuth2: []
+
   '/carrier-accounts':
     get:
       tags:
@@ -1756,8 +1738,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/carrier-account-endpoint-object'
-      security:
-        - OAuth2: []
+
       description: |-
         The carrier list endpoint returns a list of carrier-accounts that you have setup in your Carriyo account. A carrier account can be `inactive` if it is not in use.
 
@@ -1799,8 +1780,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/carrier-account-endpoint-object'
-      security:
-        - OAuth2: []
+
       x-codegen-request-body-name: body
     parameters: []
   '/carrier-accounts/{carrier-account-id}':
@@ -1835,8 +1815,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/carrier-account-endpoint-object'
-      security:
-        - OAuth2: []
+
     put:
       tags:
         - carrier-accounts
@@ -1874,8 +1853,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/carrier-account-endpoint-object'
-      security:
-        - OAuth2: []
+
       x-codegen-request-body-name: body
     delete:
       tags:
@@ -1908,8 +1886,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/carrier-account-endpoint-object'
-      security:
-        - OAuth2: []
+
     parameters:
       - schema:
           type: string
@@ -1945,8 +1922,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/manifest-response'
-      security:
-        - OAuth2: []
+
     post:
       tags:
         - manifests
@@ -1979,8 +1955,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/manifest-response'
-      security:
-        - OAuth2: []
+
       x-codegen-request-body-name: body
   '/manifests/{manifest-id}':
     get:
@@ -2014,8 +1989,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/manifest-response'
-      security:
-        - OAuth2: []
+
     delete:
       tags:
         - manifests
@@ -2047,8 +2021,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/manifest-response'
-      security:
-        - OAuth2: []
+
   '/manifests/{manifest-id}/cancel':
     patch:
       tags:
@@ -2081,8 +2054,7 @@ paths:
             'application/json':
               schema:
                 type: object
-      security:
-        - OAuth2: []
+
   '/manifests/{manifest-id}/retry':
     patch:
       tags:
@@ -2115,8 +2087,7 @@ paths:
             'application/json':
               schema:
                 type: object
-      security:
-        - OAuth2: []
+
   '/manifests/{manifest-id}/ship':
     patch:
       tags:
@@ -2149,8 +2120,7 @@ paths:
             'application/json':
               schema:
                 type: object
-      security:
-        - OAuth2: []
+
   '/attributes':
     get:
       tags:
@@ -2180,8 +2150,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/attribute-response'
-      security:
-        - OAuth2: []
+
     post:
       tags:
         - attributes
@@ -2214,8 +2183,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/attribute-response'
-      security:
-        - OAuth2: []
+
       x-codegen-request-body-name: body
   '/attributes/{attribute-id}':
     get:
@@ -2249,8 +2217,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/attribute-response'
-      security:
-        - OAuth2: []
+
       description: ''
     put:
       tags:
@@ -2289,8 +2256,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/attribute-response'
-      security:
-        - OAuth2: []
+
       x-codegen-request-body-name: body
     delete:
       tags:
@@ -2323,8 +2289,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/attribute-response'
-      security:
-        - OAuth2: []
+
   '/automation-rulesets':
     post:
       tags:
@@ -2359,8 +2324,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/automation-ruleset-with-rules-response'
-      security:
-        - OAuth2: []
+
     get:
       tags:
         - automation-rules
@@ -2583,8 +2547,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/automation-rule-response'
-      security:
-        - OAuth2: []
+
     get:
       tags:
         - automation-rules
@@ -2620,8 +2583,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/automation-rule-response'
-      security:
-        - OAuth2: []
+
   '/automation-rulesets/{ruleset-id}/rules/{automation-rule-id}':
     get:
       tags:
@@ -2661,8 +2623,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/automation-rule-response'
-      security:
-        - OAuth2: []
+
     delete:
       tags:
         - automation-rules
@@ -2701,8 +2662,7 @@ paths:
             'application/json':
               schema:
                 type: object
-      security:
-        - OAuth2: []
+
     put:
       tags:
         - automation-rules
@@ -2746,8 +2706,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/automation-rule-response'
-      security:
-        - OAuth2: []
+
   '/automation-rulesets/{ruleset-id}/rules/sequences':
     patch:
       tags:
@@ -2787,8 +2746,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/sequences-request'
-      security:
-        - OAuth2: []
+
   '/service-level-rulesets':
     post:
       tags:
@@ -2823,8 +2781,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/service-level-ruleset-with-rules-response'
-      security:
-        - OAuth2: []
+
     get:
       tags:
         - service-levels
@@ -3045,8 +3002,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/service-level-rule-response'
-      security:
-        - OAuth2: []
+
     get:
       tags:
         - service-levels
@@ -3082,8 +3038,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/service-level-rule-response'
-      security:
-        - OAuth2: []
+
   '/service-level-rulesets/{ruleset-id}/rules/{service-level-rule-id}':
     get:
       tags:
@@ -3123,8 +3078,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/service-level-rule-response'
-      security:
-        - OAuth2: []
+
     delete:
       tags:
         - service-levels
@@ -3163,8 +3117,7 @@ paths:
             'application/json':
               schema:
                 type: object
-      security:
-        - OAuth2: []
+
     put:
       tags:
         - service-levels
@@ -3208,8 +3161,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/service-level-rule-response'
-      security:
-        - OAuth2: []
+
   '/service-level-rulesets/{ruleset-id}/rules/sequences':
     patch:
       tags:
@@ -3249,8 +3201,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/sequences-request'
-      security:
-        - OAuth2: []
+
 components:
   schemas:
     attribute-request:
@@ -5764,9 +5715,14 @@ components:
         - rule_id
         - sequence
   securitySchemes:
-    OAuth2:
+    oauth2:
       type: oauth2
+      description: OAuth 2.0 authorization with Bearer token
       flows:
         clientCredentials:
           tokenUrl: 'https://api.carriyo.com/oauth/token'
           scopes: {}
+    bearerAuth: # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      description: OAuth 2.0 authorization with Bearer token
