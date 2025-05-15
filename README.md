@@ -4,6 +4,10 @@
 
 The Quiqup Carryio API client is a golang client implemented using oapi-codegen.
 
+## Example Usages (Authenticated)
+
+- [Get Shipment](./examples/get-shipment.go)
+
 ## In Development
 
 Package is in active development
