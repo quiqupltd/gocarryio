@@ -24,7 +24,7 @@ func GetShipment(ctx context.Context, shipmentId string) {
 		log.Fatalf("Failed to get shipment: %v", err)
 	}
 
-	fmt.Println(shipment)
+	fmt.Println(shipment.JSON200)
 }
 
 // function used to add the token to the request, required for authenticated requests
