@@ -22,4 +22,18 @@ All notable changes are documented in [CHANGELOG.md](./CHANGELOG.md). This proje
 
 ## Branching Model
 
+Git flow config should be in .git/config
+
+```txt
+[gitflow "branch"]
+        master = main
+        develop = develop
+[gitflow "prefix"]
+        feature = feat
+        release = release/
+        hotfix = hotfix/
+        support = support/
+        versiontag = v
+```
+
 We use [Gitflow](https://nvie.com/posts/a-successful-git-branching-model/) for managing releases and tracking changes in the changelog. Please follow the Gitflow workflow for all contributions and releases.
