@@ -1,6 +1,8 @@
 module github.com/quiqupltd/gocarryio
 
-go 1.24.3
+go 1.23.0
+
+toolchain go1.24.3
 
 require github.com/oapi-codegen/runtime v1.1.1
 
@@ -29,9 +31,4 @@ require (
 	golang.org/x/tools v0.32.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-)
-
-tool (
-	github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt
-	github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 )
