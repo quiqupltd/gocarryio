@@ -29,7 +29,7 @@ tasks:
     sources:
       - '**/*.go'
     cmds:
-      - go test -json -v ./... 2>&1 | tee /tmp/gotest.log | go tool gotestfmt
+      - go test -json -v ./... 2>&1 | tee /tmp/gotest.log | go run github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@latest
 
   coverage:
     desc: 'Run the tests and generate a coverage report'
