@@ -2343,6 +2343,15 @@ type ShipManifestParams struct {
 	ContentType *string `json:"Content-Type,omitempty"`
 }
 
+// GetAccessTokenJSONBody defines parameters for GetAccessToken.
+type GetAccessTokenJSONBody struct {
+	// ClientId The client ID generated in the Carriyo Dashboard
+	ClientId string `json:"client_id"`
+
+	// ClientSecret The client secret generated in the Carriyo Dashboard
+	ClientSecret string `json:"client_secret"`
+}
+
 // ListServiceLevelRulesetsParams defines parameters for ListServiceLevelRulesets.
 type ListServiceLevelRulesetsParams struct {
 	// Merchant merchant id
@@ -2639,6 +2648,9 @@ type GetShippingRatesJSONRequestBody = ShippingRatesRequest
 
 // CreateManifestJSONRequestBody defines body for CreateManifest for application/json ContentType.
 type CreateManifestJSONRequestBody = ManifestRequest
+
+// GetAccessTokenJSONRequestBody defines body for GetAccessToken for application/json ContentType.
+type GetAccessTokenJSONRequestBody GetAccessTokenJSONBody
 
 // CreateServiceLevelRulesetAndRulesJSONRequestBody defines body for CreateServiceLevelRulesetAndRules for application/json ContentType.
 type CreateServiceLevelRulesetAndRulesJSONRequestBody = ServiceLevelRulesetWithRulesRequest
@@ -3380,6 +3392,11 @@ type ClientInterface interface {
 	// ShipManifest request
 	ShipManifest(ctx context.Context, manifestId string, params *ShipManifestParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetAccessTokenWithBody request with any body
+	GetAccessTokenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	GetAccessToken(ctx context.Context, body GetAccessTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListServiceLevelRulesets request
 	ListServiceLevelRulesets(ctx context.Context, params *ListServiceLevelRulesetsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -4003,6 +4020,30 @@ func (c *Client) RetryManifest(ctx context.Context, manifestId string, params *R
 
 func (c *Client) ShipManifest(ctx context.Context, manifestId string, params *ShipManifestParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewShipManifestRequest(c.Server, manifestId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAccessTokenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAccessTokenRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetAccessToken(ctx context.Context, body GetAccessTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAccessTokenRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -6890,6 +6931,46 @@ func NewShipManifestRequest(server string, manifestId string, params *ShipManife
 	return req, nil
 }
 
+// NewGetAccessTokenRequest calls the generic GetAccessToken builder with application/json body
+func NewGetAccessTokenRequest(server string, body GetAccessTokenJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewGetAccessTokenRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewGetAccessTokenRequestWithBody generates requests for GetAccessToken with any type of body
+func NewGetAccessTokenRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/oauth/token")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListServiceLevelRulesetsRequest generates requests for ListServiceLevelRulesets
 func NewListServiceLevelRulesetsRequest(server string, params *ListServiceLevelRulesetsParams) (*http.Request, error) {
 	var err error
@@ -9512,6 +9593,11 @@ type ClientWithResponsesInterface interface {
 	// ShipManifestWithResponse request
 	ShipManifestWithResponse(ctx context.Context, manifestId string, params *ShipManifestParams, reqEditors ...RequestEditorFn) (*ShipManifestResponse, error)
 
+	// GetAccessTokenWithBodyWithResponse request with any body
+	GetAccessTokenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetAccessTokenResponse, error)
+
+	GetAccessTokenWithResponse(ctx context.Context, body GetAccessTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*GetAccessTokenResponse, error)
+
 	// ListServiceLevelRulesetsWithResponse request
 	ListServiceLevelRulesetsWithResponse(ctx context.Context, params *ListServiceLevelRulesetsParams, reqEditors ...RequestEditorFn) (*ListServiceLevelRulesetsResponse, error)
 
@@ -10295,6 +10381,47 @@ func (r ShipManifestResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r ShipManifestResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAccessTokenResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// AccessToken The OAuth access token to be used for API calls
+		AccessToken string `json:"access_token"`
+
+		// ExpiresIn Expiry time in seconds
+		ExpiresIn float32 `json:"expires_in"`
+
+		// Scope The permissions granted to the oauth token
+		Scope string `json:"scope"`
+
+		// TokenType Token type - Bearer
+		TokenType string `json:"token_type"`
+	}
+	JSON401 *struct {
+		// Error The type of error
+		Error string `json:"error"`
+
+		// ErrorDescription The error description
+		ErrorDescription string `json:"error_description"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAccessTokenResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAccessTokenResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -11354,6 +11481,23 @@ func (c *ClientWithResponses) ShipManifestWithResponse(ctx context.Context, mani
 		return nil, err
 	}
 	return ParseShipManifestResponse(rsp)
+}
+
+// GetAccessTokenWithBodyWithResponse request with arbitrary body returning *GetAccessTokenResponse
+func (c *ClientWithResponses) GetAccessTokenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetAccessTokenResponse, error) {
+	rsp, err := c.GetAccessTokenWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAccessTokenResponse(rsp)
+}
+
+func (c *ClientWithResponses) GetAccessTokenWithResponse(ctx context.Context, body GetAccessTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*GetAccessTokenResponse, error) {
+	rsp, err := c.GetAccessToken(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAccessTokenResponse(rsp)
 }
 
 // ListServiceLevelRulesetsWithResponse request returning *ListServiceLevelRulesetsResponse
@@ -12552,6 +12696,57 @@ func ParseShipManifestResponse(rsp *http.Response) (*ShipManifestResponse, error
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAccessTokenResponse parses an HTTP response from a GetAccessTokenWithResponse call
+func ParseGetAccessTokenResponse(rsp *http.Response) (*GetAccessTokenResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAccessTokenResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// AccessToken The OAuth access token to be used for API calls
+			AccessToken string `json:"access_token"`
+
+			// ExpiresIn Expiry time in seconds
+			ExpiresIn float32 `json:"expires_in"`
+
+			// Scope The permissions granted to the oauth token
+			Scope string `json:"scope"`
+
+			// TokenType Token type - Bearer
+			TokenType string `json:"token_type"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest struct {
+			// Error The type of error
+			Error string `json:"error"`
+
+			// ErrorDescription The error description
+			ErrorDescription string `json:"error_description"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	}
 
