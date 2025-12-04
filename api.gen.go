@@ -23,6 +23,14 @@ const (
 	Oauth2Scopes     = "oauth2.Scopes"
 )
 
+// Defines values for AddressCodeType.
+const (
+	EMIRATESMAKANICODE AddressCodeType = "EMIRATES_MAKANI_CODE"
+	KUWAITPACICODE     AddressCodeType = "KUWAIT_PACI_CODE"
+	SAUDISHORTCODE     AddressCodeType = "SAUDI_SHORT_CODE"
+	WHAT3WORDS         AddressCodeType = "WHAT_3_WORDS"
+)
+
 // Defines values for AttributeRequestAttributeEntityType.
 const (
 	AttributeRequestAttributeEntityTypeADDRESS  AttributeRequestAttributeEntityType = "ADDRESS"
@@ -140,14 +148,6 @@ const (
 	ItemRequestWeightUnitKg ItemRequestWeightUnit = "kg"
 )
 
-// Defines values for LocationCodeType.
-const (
-	EMIRATESMAKANICODE LocationCodeType = "EMIRATES_MAKANI_CODE"
-	KUWAITPACICODE     LocationCodeType = "KUWAIT_PACI_CODE"
-	SAUDISHORTCODE     LocationCodeType = "SAUDI_SHORT_CODE"
-	WHAT3WORDS         LocationCodeType = "WHAT_3_WORDS"
-)
-
 // Defines values for LocationObjectType.
 const (
 	LocationObjectTypeBusiness    LocationObjectType = "business"
@@ -247,6 +247,18 @@ const (
 	Deleted  ListCarrierAccountsParamsStatus = "deleted"
 	Inactive ListCarrierAccountsParamsStatus = "inactive"
 )
+
+// AddressCode Location code identifier for the address
+type AddressCode struct {
+	// Type Type of location code
+	Type AddressCodeType `json:"type"`
+
+	// Value The location code value
+	Value string `json:"value"`
+}
+
+// AddressCodeType Type of location code
+type AddressCodeType string
 
 // AttributeRequest defines model for attribute-request.
 type AttributeRequest struct {
@@ -717,6 +729,9 @@ type FreeFormRequest struct {
 	// Address2 Address Line 2 (e.g., apartment, floor, unit, or building).
 	Address2 *string `json:"address2,omitempty"`
 
+	// AddressCodes Array of location codes for the address
+	AddressCodes *[]AddressCode `json:"address_codes,omitempty"`
+
 	// AlternatePhone Alternate phone number for contact in E164 Format with country code.  e.g., +16175551210
 	AlternatePhone *string `json:"alternate_phone,omitempty"`
 
@@ -768,9 +783,6 @@ type FreeFormRequest struct {
 
 	// Floor Floor number
 	Floor *string `json:"floor,omitempty"`
-
-	// LocationCodes Array of location codes for the address
-	LocationCodes *[]LocationCode `json:"location_codes,omitempty"`
 
 	// Notes Any additional notes e.g., "Leave the parcel next to the bin" or "Collect the parcel from the neighbour"
 	Notes *string `json:"notes,omitempty"`
@@ -941,18 +953,6 @@ type ItemRequestBatteryPackingType string
 // ItemRequestWeightUnit Default weight unit is `kg` if not provided.
 type ItemRequestWeightUnit string
 
-// LocationCode Location code identifier for the address
-type LocationCode struct {
-	// Type Type of location code
-	Type LocationCodeType `json:"type"`
-
-	// Value The location code value
-	Value string `json:"value"`
-}
-
-// LocationCodeType Type of location code
-type LocationCodeType string
-
 // LocationObject Either a free-form address or a predefined location.
 type LocationObject struct {
 	// Address1 Address Line 1 (e.g., street, PO Box, or company name).
@@ -960,6 +960,9 @@ type LocationObject struct {
 
 	// Address2 Address Line 2 (e.g., apartment, floor, unit, or building).
 	Address2 *string `json:"address2,omitempty"`
+
+	// AddressCodes Array of location codes for the address
+	AddressCodes *[]AddressCode `json:"address_codes,omitempty"`
 
 	// AlternatePhone Alternate phone number for contact in E164 Format with country code.  e.g., +16175551210
 	AlternatePhone *string `json:"alternate_phone,omitempty"`
@@ -1023,9 +1026,6 @@ type LocationObject struct {
 
 	// InputState (Ready-only) Preserves the original input provided for "state". It is useful when Carriyo is instructed to automatically recognise the Carriyo state code.
 	InputState *string `json:"input_state,omitempty"`
-
-	// LocationCodes Array of location codes for the address
-	LocationCodes *[]LocationCode `json:"location_codes,omitempty"`
 
 	// Notes Any additional notes e.g., "Leave the parcel next to the bin" or "Collect the parcel from the neighbour"
 	Notes *string `json:"notes,omitempty"`
@@ -1999,6 +1999,9 @@ type ShippingRateItemRequestWeightUnit string
 
 // ShippingRateLocationRequest Provide geography information
 type ShippingRateLocationRequest struct {
+	// AddressCodes Array of location codes for the address
+	AddressCodes *[]AddressCode `json:"address_codes,omitempty"`
+
 	// Area District, suburb or neighbourhood, represented by the Carriyo Area Code if known. If not, it's a free text.
 	//
 	// Please use the Carriyo standard Area Code when available, to ensure that Carriyo can map this information correctly to the carrier.
@@ -2018,9 +2021,6 @@ type ShippingRateLocationRequest struct {
 
 	// Country Two-letter country code (ISO 3166-1 alpha-2).
 	Country string `json:"country"`
-
-	// LocationCodes Array of location codes for the address
-	LocationCodes *[]LocationCode `json:"location_codes,omitempty"`
 
 	// Postcode ZIP or postal code
 	Postcode *string `json:"postcode,omitempty"`
