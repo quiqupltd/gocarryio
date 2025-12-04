@@ -4247,8 +4247,8 @@ components:
           type: string
           description: 'ID type'
           example: Passport
-    location-code:
-      title: Location Code
+    address-code:
+      title: Address Code
       type: object
       description: Location code identifier for the address
       properties:
@@ -4358,11 +4358,11 @@ components:
         what3words:
           type: string
           format: ///three.word.address
-        location_codes:
+        address_codes:
           type: array
           description: Array of location codes for the address
           items:
-            $ref: '#/components/schemas/location-code'
+            $ref: '#/components/schemas/address-code'
         personal_id:
           $ref: '#/components/schemas/personal_id'
         street:
@@ -4438,11 +4438,11 @@ components:
           items:
             type: number
             example: 41.40338
-        location_codes:
+        address_codes:
           type: array
           description: Array of location codes for the address
           items:
-            $ref: '#/components/schemas/location-code'
+            $ref: '#/components/schemas/address-code'
       required:
         - city
         - country
@@ -4572,11 +4572,11 @@ components:
         what3words:
           type: string
           format: ///three.word.address
-        location_codes:
+        address_codes:
           type: array
           description: Array of location codes for the address
           items:
-            $ref: '#/components/schemas/location-code'
+            $ref: '#/components/schemas/address-code'
         personal_id:
           $ref: '#/components/schemas/personal_id'
         street:
