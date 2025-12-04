@@ -148,6 +148,14 @@ const (
 	ItemRequestWeightUnitKg ItemRequestWeightUnit = "kg"
 )
 
+// Defines values for LocationCodeType.
+const (
+	EMIRATESMAKANICODE LocationCodeType = "EMIRATES_MAKANI_CODE"
+	KUWAITPACICODE     LocationCodeType = "KUWAIT_PACI_CODE"
+	SAUDISHORTCODE     LocationCodeType = "SAUDI_SHORT_CODE"
+	WHAT3WORDS         LocationCodeType = "WHAT_3_WORDS"
+)
+
 // Defines values for LocationObjectType.
 const (
 	LocationObjectTypeBusiness    LocationObjectType = "business"
@@ -784,6 +792,9 @@ type FreeFormRequest struct {
 	// Floor Floor number
 	Floor *string `json:"floor,omitempty"`
 
+	// LocationCodes Array of location codes for the address
+	LocationCodes *[]LocationCode `json:"location_codes,omitempty"`
+
 	// Notes Any additional notes e.g., "Leave the parcel next to the bin" or "Collect the parcel from the neighbour"
 	Notes *string `json:"notes,omitempty"`
 
@@ -953,6 +964,18 @@ type ItemRequestBatteryPackingType string
 // ItemRequestWeightUnit Default weight unit is `kg` if not provided.
 type ItemRequestWeightUnit string
 
+// LocationCode Location code identifier for the address
+type LocationCode struct {
+	// Type Type of location code
+	Type LocationCodeType `json:"type"`
+
+	// Value The location code value
+	Value string `json:"value"`
+}
+
+// LocationCodeType Type of location code
+type LocationCodeType string
+
 // LocationObject Either a free-form address or a predefined location.
 type LocationObject struct {
 	// Address1 Address Line 1 (e.g., street, PO Box, or company name).
@@ -1026,6 +1049,9 @@ type LocationObject struct {
 
 	// InputState (Ready-only) Preserves the original input provided for "state". It is useful when Carriyo is instructed to automatically recognise the Carriyo state code.
 	InputState *string `json:"input_state,omitempty"`
+
+	// LocationCodes Array of location codes for the address
+	LocationCodes *[]LocationCode `json:"location_codes,omitempty"`
 
 	// Notes Any additional notes e.g., "Leave the parcel next to the bin" or "Collect the parcel from the neighbour"
 	Notes *string `json:"notes,omitempty"`
@@ -2021,6 +2047,9 @@ type ShippingRateLocationRequest struct {
 
 	// Country Two-letter country code (ISO 3166-1 alpha-2).
 	Country string `json:"country"`
+
+	// LocationCodes Array of location codes for the address
+	LocationCodes *[]LocationCode `json:"location_codes,omitempty"`
 
 	// Postcode ZIP or postal code
 	Postcode *string `json:"postcode,omitempty"`
