@@ -4247,6 +4247,25 @@ components:
           type: string
           description: 'ID type'
           example: Passport
+    location-code:
+      title: Location Code
+      type: object
+      description: Location code identifier for the address
+      properties:
+        type:
+          type: string
+          enum:
+            - WHAT_3_WORDS
+            - EMIRATES_MAKANI_CODE
+            - KUWAIT_PACI_CODE
+            - SAUDI_SHORT_CODE
+          description: Type of location code
+        value:
+          type: string
+          description: The location code value
+      required:
+        - type
+        - value
     free-form-request:
       title: Free-Form Request
       description: |-
@@ -4339,6 +4358,11 @@ components:
         what3words:
           type: string
           format: ///three.word.address
+        location_codes:
+          type: array
+          description: Array of location codes for the address
+          items:
+            $ref: '#/components/schemas/location-code'
         personal_id:
           $ref: '#/components/schemas/personal_id'
         street:
@@ -4414,6 +4438,11 @@ components:
           items:
             type: number
             example: 41.40338
+        location_codes:
+          type: array
+          description: Array of location codes for the address
+          items:
+            $ref: '#/components/schemas/location-code'
       required:
         - city
         - country
@@ -4543,6 +4572,11 @@ components:
         what3words:
           type: string
           format: ///three.word.address
+        location_codes:
+          type: array
+          description: Array of location codes for the address
+          items:
+            $ref: '#/components/schemas/location-code'
         personal_id:
           $ref: '#/components/schemas/personal_id'
         street:
