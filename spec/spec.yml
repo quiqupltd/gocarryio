@@ -4247,6 +4247,45 @@ components:
           type: string
           description: 'ID type'
           example: Passport
+    registration-number:
+      title: Registration Number
+      type: object
+      description: Registration number for customs/VAT purposes
+      properties:
+        type_code:
+          type: string
+          description: Type of registration number
+          enum:
+            - VAT
+            - EIN
+            - GST
+            - SSN
+            - EOR
+            - DUN
+            - FED
+            - STA
+            - CNP
+            - IE
+            - INN
+            - KPP
+            - OGR
+            - OKP
+            - SDT
+            - IOSS
+            - PAN
+          example: VAT
+        value:
+          type: string
+          description: The registration number value
+          example: GB123456789
+        issuer_country_code:
+          type: string
+          description: ISO 3166-1 alpha-2 country code of the issuer
+          example: GB
+      required:
+        - type_code
+        - value
+        - issuer_country_code
     address-code:
       title: Address Code
       type: object
@@ -4365,6 +4404,11 @@ components:
             $ref: '#/components/schemas/address-code'
         personal_id:
           $ref: '#/components/schemas/personal_id'
+        registration_numbers:
+          type: array
+          description: Array of registration numbers for customs/VAT purposes
+          items:
+            $ref: '#/components/schemas/registration-number'
         street:
           type: string
           description: Street number or name
@@ -4579,6 +4623,11 @@ components:
             $ref: '#/components/schemas/address-code'
         personal_id:
           $ref: '#/components/schemas/personal_id'
+        registration_numbers:
+          type: array
+          description: Array of registration numbers for customs/VAT purposes
+          items:
+            $ref: '#/components/schemas/registration-number'
         street:
           type: string
           description: Street number or name
