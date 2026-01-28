@@ -166,6 +166,27 @@ const (
 	PaymentRequestPaymentModePREPAID        PaymentRequestPaymentMode = "PRE_PAID"
 )
 
+// Defines values for RegistrationNumberTypeCode.
+const (
+	CNP  RegistrationNumberTypeCode = "CNP"
+	DUN  RegistrationNumberTypeCode = "DUN"
+	EIN  RegistrationNumberTypeCode = "EIN"
+	EOR  RegistrationNumberTypeCode = "EOR"
+	FED  RegistrationNumberTypeCode = "FED"
+	GST  RegistrationNumberTypeCode = "GST"
+	IE   RegistrationNumberTypeCode = "IE"
+	INN  RegistrationNumberTypeCode = "INN"
+	IOSS RegistrationNumberTypeCode = "IOSS"
+	KPP  RegistrationNumberTypeCode = "KPP"
+	OGR  RegistrationNumberTypeCode = "OGR"
+	OKP  RegistrationNumberTypeCode = "OKP"
+	PAN  RegistrationNumberTypeCode = "PAN"
+	SDT  RegistrationNumberTypeCode = "SDT"
+	SSN  RegistrationNumberTypeCode = "SSN"
+	STA  RegistrationNumberTypeCode = "STA"
+	VAT  RegistrationNumberTypeCode = "VAT"
+)
+
 // Defines values for RulesetRequestEntityType.
 const (
 	RulesetRequestEntityTypeFORWARD RulesetRequestEntityType = "FORWARD"
@@ -799,6 +820,9 @@ type FreeFormRequest struct {
 	// Postcode ZIP or postal code
 	Postcode *string `json:"postcode,omitempty"`
 
+	// RegistrationNumbers Array of registration numbers for customs/VAT purposes
+	RegistrationNumbers *[]RegistrationNumber `json:"registration_numbers,omitempty"`
+
 	// State State, county, province, or region, represented by the Carriyo State Code if known. If not, it's a free text.
 	//
 	// **Note: The state is automatically set if a standard Carriyo city is passed.**
@@ -1059,6 +1083,9 @@ type LocationObject struct {
 
 	// Postcode ZIP or postal code
 	Postcode *string `json:"postcode,omitempty"`
+
+	// RegistrationNumbers Array of registration numbers for customs/VAT purposes
+	RegistrationNumbers *[]RegistrationNumber `json:"registration_numbers,omitempty"`
 
 	// State State, county, province, or region, represented by the Carriyo State Code if known. If not, it's a free text.
 	//
@@ -1356,6 +1383,21 @@ type ReferencesRequest struct {
 	// PartnerShipmentReference Unique shipment reference provided by the merchant
 	PartnerShipmentReference string `json:"partner_shipment_reference"`
 }
+
+// RegistrationNumber Registration number for customs/VAT purposes
+type RegistrationNumber struct {
+	// IssuerCountryCode ISO 3166-1 alpha-2 country code of the issuer
+	IssuerCountryCode string `json:"issuer_country_code"`
+
+	// TypeCode Type of registration number
+	TypeCode RegistrationNumberTypeCode `json:"type_code"`
+
+	// Value The registration number value
+	Value string `json:"value"`
+}
+
+// RegistrationNumberTypeCode Type of registration number
+type RegistrationNumberTypeCode string
 
 // RulesetRequest defines model for ruleset-request.
 type RulesetRequest struct {

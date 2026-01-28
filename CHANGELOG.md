@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [v0.5.0]
+
+- Add registration_numbers field to FreeFormRequest and LocationObject for customs/VAT support
+
 ## [v0.4.2]
 
 - Fix naming for the address codes
