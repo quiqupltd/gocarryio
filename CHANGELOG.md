@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Add `manufacturer_id` to item-request
+- Add upload-document, bulk-upload-documents and retry-document-upload endpoints
+- Add `document_id`, `carrier_upload_status`, `carrier_upload_date` and `message` to document-object
+- Pin oapi-codegen to v2.5.1 so regeneration does not churn the generated client
+
 ## [v0.5.0]
 
 - Add registration_numbers field to FreeFormRequest and LocationObject for customs/VAT support

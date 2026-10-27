@@ -693,9 +693,23 @@ type DimensionUnit string
 
 // DocumentObject defines model for document-object.
 type DocumentObject struct {
+	// CarrierUploadDate When the document was uploaded to the carrier
+	CarrierUploadDate *time.Time `json:"carrier_upload_date,omitempty"`
+
+	// CarrierUploadStatus How the upload to the carrier is going, for documents configured for carrier upload
+	// Possible Values:
+	// pending, complete, error
+	CarrierUploadStatus *string `json:"carrier_upload_status,omitempty"`
+
+	// DocumentId The ID of the document setting this document was created from
+	DocumentId *string `json:"document_id,omitempty"`
+
 	// Format Possible Values:
 	// pdf
 	Format *string `json:"format,omitempty"`
+
+	// Message Error details from the carrier when `carrier_upload_status` is `error`
+	Message *string `json:"message,omitempty"`
 
 	// Name Document name
 	Name *string `json:"name,omitempty"`
@@ -710,6 +724,18 @@ type DocumentObject struct {
 
 	// Url The url of document provided by the Carriyo or carrier
 	Url *string `json:"url,omitempty"`
+}
+
+// DocumentUploadRequest A document to attach to a shipment. Either `document_id` or `document_name` is required.
+type DocumentUploadRequest struct {
+	// ContentBase64 The document content, Base64 encoded. Only PDF is supported.
+	ContentBase64 string `json:"content_base64"`
+
+	// DocumentId The ID of the document setting to use. Preferred over `document_name`, which must match exactly.
+	DocumentId *string `json:"document_id,omitempty"`
+
+	// DocumentName The name of the document setting to use. If several settings share the name, the first match is used.
+	DocumentName *string `json:"document_name,omitempty"`
 }
 
 // ErrorDetail defines model for error-detail.
@@ -941,6 +967,9 @@ type ItemRequest struct {
 
 	// ImageLink Image URL of the item
 	ImageLink *string `json:"image_link,omitempty"`
+
+	// ManufacturerId Manufacturer reference for the item. May be required by some carriers for certain destination countries.
+	ManufacturerId *string `json:"manufacturer_id,omitempty"`
 
 	// Notes Additional information about the item
 	Notes *string `json:"notes,omitempty"`
@@ -2605,6 +2634,30 @@ type ConfirmShipmentParams struct {
 	ContentType string `json:"Content-Type"`
 }
 
+// UploadDocumentParams defines parameters for UploadDocument.
+type UploadDocumentParams struct {
+	XApiKey        string  `json:"x-api-key"`
+	TenantId       string  `json:"tenant-id"`
+	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
+}
+
+// BulkUploadDocumentsJSONBody defines parameters for BulkUploadDocuments.
+type BulkUploadDocumentsJSONBody = []DocumentUploadRequest
+
+// BulkUploadDocumentsParams defines parameters for BulkUploadDocuments.
+type BulkUploadDocumentsParams struct {
+	XApiKey        string  `json:"x-api-key"`
+	TenantId       string  `json:"tenant-id"`
+	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
+}
+
+// RetryDocumentUploadParams defines parameters for RetryDocumentUpload.
+type RetryDocumentUploadParams struct {
+	XApiKey        string  `json:"x-api-key"`
+	TenantId       string  `json:"tenant-id"`
+	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
+}
+
 // EstimateShippingCostForShipmentParams defines parameters for EstimateShippingCostForShipment.
 type EstimateShippingCostForShipmentParams struct {
 	XApiKey  string `json:"x-api-key"`
@@ -2755,6 +2808,12 @@ type CancelShipmentJSONRequestBody CancelShipmentJSONBody
 
 // ConfirmShipmentJSONRequestBody defines body for ConfirmShipment for application/json ContentType.
 type ConfirmShipmentJSONRequestBody = ShipmentPatchRequest
+
+// UploadDocumentJSONRequestBody defines body for UploadDocument for application/json ContentType.
+type UploadDocumentJSONRequestBody = DocumentUploadRequest
+
+// BulkUploadDocumentsJSONRequestBody defines body for BulkUploadDocuments for application/json ContentType.
+type BulkUploadDocumentsJSONRequestBody = BulkUploadDocumentsJSONBody
 
 // UpdateParcelsJSONRequestBody defines body for UpdateParcels for application/json ContentType.
 type UpdateParcelsJSONRequestBody = UpdateParcelsRequest
@@ -3549,6 +3608,19 @@ type ClientInterface interface {
 	ConfirmShipmentWithBody(ctx context.Context, shipmentId string, params *ConfirmShipmentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	ConfirmShipment(ctx context.Context, shipmentId string, params *ConfirmShipmentParams, body ConfirmShipmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UploadDocumentWithBody request with any body
+	UploadDocumentWithBody(ctx context.Context, shipmentId string, params *UploadDocumentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UploadDocument(ctx context.Context, shipmentId string, params *UploadDocumentParams, body UploadDocumentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// BulkUploadDocumentsWithBody request with any body
+	BulkUploadDocumentsWithBody(ctx context.Context, shipmentId string, params *BulkUploadDocumentsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	BulkUploadDocuments(ctx context.Context, shipmentId string, params *BulkUploadDocumentsParams, body BulkUploadDocumentsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RetryDocumentUpload request
+	RetryDocumentUpload(ctx context.Context, shipmentId string, documentIdentifier string, params *RetryDocumentUploadParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// EstimateShippingCostForShipment request
 	EstimateShippingCostForShipment(ctx context.Context, shipmentId string, params *EstimateShippingCostForShipmentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4487,6 +4559,66 @@ func (c *Client) ConfirmShipmentWithBody(ctx context.Context, shipmentId string,
 
 func (c *Client) ConfirmShipment(ctx context.Context, shipmentId string, params *ConfirmShipmentParams, body ConfirmShipmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewConfirmShipmentRequest(c.Server, shipmentId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UploadDocumentWithBody(ctx context.Context, shipmentId string, params *UploadDocumentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUploadDocumentRequestWithBody(c.Server, shipmentId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UploadDocument(ctx context.Context, shipmentId string, params *UploadDocumentParams, body UploadDocumentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUploadDocumentRequest(c.Server, shipmentId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) BulkUploadDocumentsWithBody(ctx context.Context, shipmentId string, params *BulkUploadDocumentsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewBulkUploadDocumentsRequestWithBody(c.Server, shipmentId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) BulkUploadDocuments(ctx context.Context, shipmentId string, params *BulkUploadDocumentsParams, body BulkUploadDocumentsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewBulkUploadDocumentsRequest(c.Server, shipmentId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RetryDocumentUpload(ctx context.Context, shipmentId string, documentIdentifier string, params *RetryDocumentUploadParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRetryDocumentUploadRequest(c.Server, shipmentId, documentIdentifier, params)
 	if err != nil {
 		return nil, err
 	}
@@ -8774,6 +8906,240 @@ func NewConfirmShipmentRequestWithBody(server string, shipmentId string, params 
 	return req, nil
 }
 
+// NewUploadDocumentRequest calls the generic UploadDocument builder with application/json body
+func NewUploadDocumentRequest(server string, shipmentId string, params *UploadDocumentParams, body UploadDocumentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUploadDocumentRequestWithBody(server, shipmentId, params, "application/json", bodyReader)
+}
+
+// NewUploadDocumentRequestWithBody generates requests for UploadDocument with any type of body
+func NewUploadDocumentRequestWithBody(server string, shipmentId string, params *UploadDocumentParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "shipment_id", runtime.ParamLocationPath, shipmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/shipments/%s/documents", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-api-key", runtime.ParamLocationHeader, params.XApiKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-api-key", headerParam0)
+
+		var headerParam1 string
+
+		headerParam1, err = runtime.StyleParamWithLocation("simple", false, "tenant-id", runtime.ParamLocationHeader, params.TenantId)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("tenant-id", headerParam1)
+
+		if params.IdempotencyKey != nil {
+			var headerParam2 string
+
+			headerParam2, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, *params.IdempotencyKey)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Idempotency-Key", headerParam2)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewBulkUploadDocumentsRequest calls the generic BulkUploadDocuments builder with application/json body
+func NewBulkUploadDocumentsRequest(server string, shipmentId string, params *BulkUploadDocumentsParams, body BulkUploadDocumentsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewBulkUploadDocumentsRequestWithBody(server, shipmentId, params, "application/json", bodyReader)
+}
+
+// NewBulkUploadDocumentsRequestWithBody generates requests for BulkUploadDocuments with any type of body
+func NewBulkUploadDocumentsRequestWithBody(server string, shipmentId string, params *BulkUploadDocumentsParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "shipment_id", runtime.ParamLocationPath, shipmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/shipments/%s/documents/bulk", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-api-key", runtime.ParamLocationHeader, params.XApiKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-api-key", headerParam0)
+
+		var headerParam1 string
+
+		headerParam1, err = runtime.StyleParamWithLocation("simple", false, "tenant-id", runtime.ParamLocationHeader, params.TenantId)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("tenant-id", headerParam1)
+
+		if params.IdempotencyKey != nil {
+			var headerParam2 string
+
+			headerParam2, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, *params.IdempotencyKey)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Idempotency-Key", headerParam2)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewRetryDocumentUploadRequest generates requests for RetryDocumentUpload
+func NewRetryDocumentUploadRequest(server string, shipmentId string, documentIdentifier string, params *RetryDocumentUploadParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "shipment_id", runtime.ParamLocationPath, shipmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "document_identifier", runtime.ParamLocationPath, documentIdentifier)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/shipments/%s/documents/%s/retry", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-api-key", runtime.ParamLocationHeader, params.XApiKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-api-key", headerParam0)
+
+		var headerParam1 string
+
+		headerParam1, err = runtime.StyleParamWithLocation("simple", false, "tenant-id", runtime.ParamLocationHeader, params.TenantId)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("tenant-id", headerParam1)
+
+		if params.IdempotencyKey != nil {
+			var headerParam2 string
+
+			headerParam2, err = runtime.StyleParamWithLocation("simple", false, "Idempotency-Key", runtime.ParamLocationHeader, *params.IdempotencyKey)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("Idempotency-Key", headerParam2)
+		}
+
+	}
+
+	return req, nil
+}
+
 // NewEstimateShippingCostForShipmentRequest generates requests for EstimateShippingCostForShipment
 func NewEstimateShippingCostForShipmentRequest(server string, shipmentId string, params *EstimateShippingCostForShipmentParams) (*http.Request, error) {
 	var err error
@@ -9750,6 +10116,19 @@ type ClientWithResponsesInterface interface {
 	ConfirmShipmentWithBodyWithResponse(ctx context.Context, shipmentId string, params *ConfirmShipmentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ConfirmShipmentResponse, error)
 
 	ConfirmShipmentWithResponse(ctx context.Context, shipmentId string, params *ConfirmShipmentParams, body ConfirmShipmentJSONRequestBody, reqEditors ...RequestEditorFn) (*ConfirmShipmentResponse, error)
+
+	// UploadDocumentWithBodyWithResponse request with any body
+	UploadDocumentWithBodyWithResponse(ctx context.Context, shipmentId string, params *UploadDocumentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadDocumentResponse, error)
+
+	UploadDocumentWithResponse(ctx context.Context, shipmentId string, params *UploadDocumentParams, body UploadDocumentJSONRequestBody, reqEditors ...RequestEditorFn) (*UploadDocumentResponse, error)
+
+	// BulkUploadDocumentsWithBodyWithResponse request with any body
+	BulkUploadDocumentsWithBodyWithResponse(ctx context.Context, shipmentId string, params *BulkUploadDocumentsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BulkUploadDocumentsResponse, error)
+
+	BulkUploadDocumentsWithResponse(ctx context.Context, shipmentId string, params *BulkUploadDocumentsParams, body BulkUploadDocumentsJSONRequestBody, reqEditors ...RequestEditorFn) (*BulkUploadDocumentsResponse, error)
+
+	// RetryDocumentUploadWithResponse request
+	RetryDocumentUploadWithResponse(ctx context.Context, shipmentId string, documentIdentifier string, params *RetryDocumentUploadParams, reqEditors ...RequestEditorFn) (*RetryDocumentUploadResponse, error)
 
 	// EstimateShippingCostForShipmentWithResponse request
 	EstimateShippingCostForShipmentWithResponse(ctx context.Context, shipmentId string, params *EstimateShippingCostForShipmentParams, reqEditors ...RequestEditorFn) (*EstimateShippingCostForShipmentResponse, error)
@@ -10961,6 +11340,78 @@ func (r ConfirmShipmentResponse) StatusCode() int {
 	return 0
 }
 
+type UploadDocumentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ShipmentObject
+	JSON400      *CreateShipmentErrorResponse
+	JSON404      *CreateShipmentErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r UploadDocumentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UploadDocumentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type BulkUploadDocumentsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ShipmentObject
+	JSON400      *CreateShipmentErrorResponse
+	JSON404      *CreateShipmentErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r BulkUploadDocumentsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r BulkUploadDocumentsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RetryDocumentUploadResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ShipmentObject
+	JSON400      *CreateShipmentErrorResponse
+	JSON404      *CreateShipmentErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r RetryDocumentUploadResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RetryDocumentUploadResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type EstimateShippingCostForShipmentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -11837,6 +12288,49 @@ func (c *ClientWithResponses) ConfirmShipmentWithResponse(ctx context.Context, s
 		return nil, err
 	}
 	return ParseConfirmShipmentResponse(rsp)
+}
+
+// UploadDocumentWithBodyWithResponse request with arbitrary body returning *UploadDocumentResponse
+func (c *ClientWithResponses) UploadDocumentWithBodyWithResponse(ctx context.Context, shipmentId string, params *UploadDocumentParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadDocumentResponse, error) {
+	rsp, err := c.UploadDocumentWithBody(ctx, shipmentId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUploadDocumentResponse(rsp)
+}
+
+func (c *ClientWithResponses) UploadDocumentWithResponse(ctx context.Context, shipmentId string, params *UploadDocumentParams, body UploadDocumentJSONRequestBody, reqEditors ...RequestEditorFn) (*UploadDocumentResponse, error) {
+	rsp, err := c.UploadDocument(ctx, shipmentId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUploadDocumentResponse(rsp)
+}
+
+// BulkUploadDocumentsWithBodyWithResponse request with arbitrary body returning *BulkUploadDocumentsResponse
+func (c *ClientWithResponses) BulkUploadDocumentsWithBodyWithResponse(ctx context.Context, shipmentId string, params *BulkUploadDocumentsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*BulkUploadDocumentsResponse, error) {
+	rsp, err := c.BulkUploadDocumentsWithBody(ctx, shipmentId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseBulkUploadDocumentsResponse(rsp)
+}
+
+func (c *ClientWithResponses) BulkUploadDocumentsWithResponse(ctx context.Context, shipmentId string, params *BulkUploadDocumentsParams, body BulkUploadDocumentsJSONRequestBody, reqEditors ...RequestEditorFn) (*BulkUploadDocumentsResponse, error) {
+	rsp, err := c.BulkUploadDocuments(ctx, shipmentId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseBulkUploadDocumentsResponse(rsp)
+}
+
+// RetryDocumentUploadWithResponse request returning *RetryDocumentUploadResponse
+func (c *ClientWithResponses) RetryDocumentUploadWithResponse(ctx context.Context, shipmentId string, documentIdentifier string, params *RetryDocumentUploadParams, reqEditors ...RequestEditorFn) (*RetryDocumentUploadResponse, error) {
+	rsp, err := c.RetryDocumentUpload(ctx, shipmentId, documentIdentifier, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRetryDocumentUploadResponse(rsp)
 }
 
 // EstimateShippingCostForShipmentWithResponse request returning *EstimateShippingCostForShipmentResponse
@@ -13396,6 +13890,126 @@ func ParseConfirmShipmentResponse(rsp *http.Response) (*ConfirmShipmentResponse,
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUploadDocumentResponse parses an HTTP response from a UploadDocumentWithResponse call
+func ParseUploadDocumentResponse(rsp *http.Response) (*UploadDocumentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UploadDocumentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ShipmentObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest CreateShipmentErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest CreateShipmentErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseBulkUploadDocumentsResponse parses an HTTP response from a BulkUploadDocumentsWithResponse call
+func ParseBulkUploadDocumentsResponse(rsp *http.Response) (*BulkUploadDocumentsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &BulkUploadDocumentsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ShipmentObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest CreateShipmentErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest CreateShipmentErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRetryDocumentUploadResponse parses an HTTP response from a RetryDocumentUploadWithResponse call
+func ParseRetryDocumentUploadResponse(rsp *http.Response) (*RetryDocumentUploadResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RetryDocumentUploadResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ShipmentObject
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest CreateShipmentErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest CreateShipmentErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 
