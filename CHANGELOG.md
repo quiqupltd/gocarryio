@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [v0.6.0]
+
 - Add `manufacturer_id` to item-request
 - Add upload-document, bulk-upload-documents and retry-document-upload endpoints
 - Add `document_id`, `carrier_upload_status`, `carrier_upload_date` and `message` to document-object
