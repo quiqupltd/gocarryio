@@ -1297,6 +1297,182 @@ paths:
                 $ref: '#/components/schemas/shipment-object'
 
       x-codegen-request-body-name: body
+  '/shipments/{shipment_id}/documents':
+    post:
+      tags:
+        - shipments
+      summary: Upload Document
+      description: |-
+        Attach a document (PDF) to a shipment. Identify the document setting by `document_id` or `document_name`; `document_id` takes precedence when both are sent. Rejects a document for a setting already attached to the shipment.
+
+        Carriyo pushes the document to the carrier asynchronously once the shipment is past `draft`, `pending` and `error`, the carrier supports document upload (DHL, FedEx, UPS) and the carrier account maps the document setting. Each document's `carrier_upload_status` reports progress.
+
+        The `shipment_id` path parameter also accepts the merchant `partner_shipment_reference`.
+      operationId: upload-document
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/document-upload-request'
+        required: true
+      responses:
+        '200':
+          description: Document uploaded. Returns the updated shipment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+        '400':
+          description: Missing identifier or content, no matching document setting, document already attached, or content not in the setting's format.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/create-shipment-error-response'
+        '404':
+          description: Shipment not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/create-shipment-error-response'
+      x-codegen-request-body-name: body
+  '/shipments/{shipment_id}/documents/bulk':
+    post:
+      tags:
+        - shipments
+      summary: Bulk Upload Documents
+      description: |-
+        Upload or replace several documents on a shipment in one request. Unlike Upload Document this upserts: a document for a setting already on the shipment is replaced. If any entry matches no document setting the whole request is rejected with 400.
+
+        The `shipment_id` path parameter also accepts the merchant `partner_shipment_reference`.
+      operationId: bulk-upload-documents
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/document-upload-request'
+        required: true
+      responses:
+        '200':
+          description: Documents uploaded. Returns the updated shipment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+        '400':
+          description: An entry is invalid or matches no document setting. Nothing is stored.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/create-shipment-error-response'
+        '404':
+          description: Shipment not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/create-shipment-error-response'
+      x-codegen-request-body-name: body
+  '/shipments/{shipment_id}/documents/{document_identifier}/retry':
+    post:
+      tags:
+        - shipments
+      summary: Retry Document Upload
+      description: |-
+        Re-attempt the carrier upload of a document already on the shipment, after a previous carrier upload failed. Runs asynchronously: the document's `carrier_upload_status` is set to `pending`, then moves to `complete` or `error`.
+
+        Returns 400 when the shipment has no carrier account, the document is missing or has no stored URL, the carrier does not accept documents, or the carrier account has no mapping for the document.
+
+        The `shipment_id` path parameter also accepts the merchant `partner_shipment_reference`.
+      operationId: retry-document-upload
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: document_identifier
+          in: path
+          required: true
+          description: The document ID or document name (URL-encoded).
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Retry accepted. Returns the updated shipment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shipment-object'
+        '400':
+          description: A retry prerequisite is not met.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/create-shipment-error-response'
+        '404':
+          description: Shipment not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/create-shipment-error-response'
   '/shipments/{shipment_id}/update-status':
     post:
       tags:
@@ -3767,6 +3943,38 @@ components:
         url:
           type: string
           description: The url of document provided by the Carriyo or carrier
+        document_id:
+          type: string
+          description: The ID of the document setting this document was created from
+        carrier_upload_status:
+          type: string
+          description: |-
+            How the upload to the carrier is going, for documents configured for carrier upload
+            Possible Values:
+            pending, complete, error
+        carrier_upload_date:
+          type: string
+          format: date-time
+          description: When the document was uploaded to the carrier
+        message:
+          type: string
+          description: Error details from the carrier when `carrier_upload_status` is `error`
+    document-upload-request:
+      title: Document Upload Request
+      type: object
+      description: A document to attach to a shipment. Either `document_id` or `document_name` is required.
+      required:
+        - content_base64
+      properties:
+        document_id:
+          type: string
+          description: The ID of the document setting to use. Preferred over `document_name`, which must match exactly.
+        document_name:
+          type: string
+          description: The name of the document setting to use. If several settings share the name, the first match is used.
+        content_base64:
+          type: string
+          description: The document content, Base64 encoded. Only PDF is supported.
     customs-object:
       title: Customs
       type: object
@@ -3850,6 +4058,9 @@ components:
         hs_code:
           type: string
           description: HS Code of the item. Usually required for cross-border shipping.
+        manufacturer_id:
+          type: string
+          description: Manufacturer reference for the item. May be required by some carriers for certain destination countries.
         dangerous_goods:
           type: boolean
           description: If the item is classified as dangerous goods. Usually required for cross-border shipping.
