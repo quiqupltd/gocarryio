@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [v0.7.0]
+
+- Add live-track-shipment endpoint (`GET /shipments/{shipment_id}/live-tracking`) and the live-tracking-info schema
+
 ## [v0.6.0]
 
 - Add `manufacturer_id` to item-request
