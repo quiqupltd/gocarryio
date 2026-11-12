@@ -1006,6 +1006,24 @@ type ItemRequestBatteryPackingType string
 // ItemRequestWeightUnit Default weight unit is `kg` if not provided.
 type ItemRequestWeightUnit string
 
+// LiveTrackingInfo Driver location, contact details, and ETA for a shipment currently being collected or delivered. Returned by **Get live tracking** for supported carriers.
+type LiveTrackingInfo struct {
+	// DriverLocation Current geographic position of the driver, as reported by the carrier.
+	DriverLocation *struct {
+		Latitude  *float64 `json:"latitude,omitempty"`
+		Longitude *float64 `json:"longitude,omitempty"`
+	} `json:"driver_location,omitempty"`
+
+	// DriverName Driver's name, where the carrier exposes it.
+	DriverName *string `json:"driver_name,omitempty"`
+
+	// DriverPhone Driver's contact phone, where the carrier exposes it.
+	DriverPhone *string `json:"driver_phone,omitempty"`
+
+	// EstimatedTime Carrier-reported estimated arrival time for the next stop.
+	EstimatedTime *time.Time `json:"estimated_time,omitempty"`
+}
+
 // LocationObject Either a free-form address or a predefined location.
 type LocationObject struct {
 	// Address1 Address Line 1 (e.g., street, PO Box, or company name).
@@ -2670,6 +2688,12 @@ type RefreshLabelParams struct {
 	TenantId string `json:"tenant-id"`
 }
 
+// LiveTrackShipmentParams defines parameters for LiveTrackShipment.
+type LiveTrackShipmentParams struct {
+	XApiKey  string `json:"x-api-key"`
+	TenantId string `json:"tenant-id"`
+}
+
 // UpdateParcelsParams defines parameters for UpdateParcels.
 type UpdateParcelsParams struct {
 	XApiKey     string `json:"x-api-key"`
@@ -3627,6 +3651,9 @@ type ClientInterface interface {
 
 	// RefreshLabel request
 	RefreshLabel(ctx context.Context, shipmentId string, params *RefreshLabelParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// LiveTrackShipment request
+	LiveTrackShipment(ctx context.Context, shipmentId string, params *LiveTrackShipmentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// UpdateParcelsWithBody request with any body
 	UpdateParcelsWithBody(ctx context.Context, shipmentId string, params *UpdateParcelsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4643,6 +4670,18 @@ func (c *Client) EstimateShippingCostForShipment(ctx context.Context, shipmentId
 
 func (c *Client) RefreshLabel(ctx context.Context, shipmentId string, params *RefreshLabelParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewRefreshLabelRequest(c.Server, shipmentId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) LiveTrackShipment(ctx context.Context, shipmentId string, params *LiveTrackShipmentParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLiveTrackShipmentRequest(c.Server, shipmentId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -9252,6 +9291,62 @@ func NewRefreshLabelRequest(server string, shipmentId string, params *RefreshLab
 	return req, nil
 }
 
+// NewLiveTrackShipmentRequest generates requests for LiveTrackShipment
+func NewLiveTrackShipmentRequest(server string, shipmentId string, params *LiveTrackShipmentParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "shipment_id", runtime.ParamLocationPath, shipmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/shipments/%s/live-tracking", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-api-key", runtime.ParamLocationHeader, params.XApiKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-api-key", headerParam0)
+
+		var headerParam1 string
+
+		headerParam1, err = runtime.StyleParamWithLocation("simple", false, "tenant-id", runtime.ParamLocationHeader, params.TenantId)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("tenant-id", headerParam1)
+
+	}
+
+	return req, nil
+}
+
 // NewUpdateParcelsRequest calls the generic UpdateParcels builder with application/json body
 func NewUpdateParcelsRequest(server string, shipmentId string, params *UpdateParcelsParams, body UpdateParcelsJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -10135,6 +10230,9 @@ type ClientWithResponsesInterface interface {
 
 	// RefreshLabelWithResponse request
 	RefreshLabelWithResponse(ctx context.Context, shipmentId string, params *RefreshLabelParams, reqEditors ...RequestEditorFn) (*RefreshLabelResponse, error)
+
+	// LiveTrackShipmentWithResponse request
+	LiveTrackShipmentWithResponse(ctx context.Context, shipmentId string, params *LiveTrackShipmentParams, reqEditors ...RequestEditorFn) (*LiveTrackShipmentResponse, error)
 
 	// UpdateParcelsWithBodyWithResponse request with any body
 	UpdateParcelsWithBodyWithResponse(ctx context.Context, shipmentId string, params *UpdateParcelsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateParcelsResponse, error)
@@ -11458,6 +11556,29 @@ func (r RefreshLabelResponse) StatusCode() int {
 	return 0
 }
 
+type LiveTrackShipmentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *LiveTrackingInfo
+	JSON400      *CreateShipmentErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r LiveTrackShipmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LiveTrackShipmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type UpdateParcelsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -12349,6 +12470,15 @@ func (c *ClientWithResponses) RefreshLabelWithResponse(ctx context.Context, ship
 		return nil, err
 	}
 	return ParseRefreshLabelResponse(rsp)
+}
+
+// LiveTrackShipmentWithResponse request returning *LiveTrackShipmentResponse
+func (c *ClientWithResponses) LiveTrackShipmentWithResponse(ctx context.Context, shipmentId string, params *LiveTrackShipmentParams, reqEditors ...RequestEditorFn) (*LiveTrackShipmentResponse, error) {
+	rsp, err := c.LiveTrackShipment(ctx, shipmentId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLiveTrackShipmentResponse(rsp)
 }
 
 // UpdateParcelsWithBodyWithResponse request with arbitrary body returning *UpdateParcelsResponse
@@ -14064,6 +14194,39 @@ func ParseRefreshLabelResponse(rsp *http.Response) (*RefreshLabelResponse, error
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseLiveTrackShipmentResponse parses an HTTP response from a LiveTrackShipmentWithResponse call
+func ParseLiveTrackShipmentResponse(rsp *http.Response) (*LiveTrackShipmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LiveTrackShipmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LiveTrackingInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest CreateShipmentErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	}
 

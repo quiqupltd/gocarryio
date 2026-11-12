@@ -722,6 +722,66 @@ paths:
                       - Duplicate partner shipment reference
 
       x-codegen-request-body-name: body
+  '/shipments/{shipment_id}/live-tracking':
+    get:
+      tags:
+        - shipments
+      summary: Get live tracking
+      description: |-
+        Fetch real-time driver location and ETA for a shipment that is currently being collected
+        or delivered. Designed for same-day, hyper-local carriers whose drivers move continuously
+        through the day; the response is a snapshot of where the driver is right now, not a list
+        of past events.
+
+        **Carrier support.** Only supported by carriers whose handlers integrate with the carrier's live driver-tracking
+        API. Today that means **Careem Express**, **Quiqup** and **noon**. On any other carrier the
+        call succeeds with an empty payload rather than failing, so treat an empty response as
+        "this carrier does not offer live tracking", not as an error.
+
+        **Status requirements.** The shipment must be in a live-trackable status: `out_for_collection` or `out_for_delivery`.
+        Calling on a shipment in any other status returns `400` with
+        `"Shipment is not in a live trackable status."`.
+
+        **Caching.** Results are cached for 15 seconds per tenant, carrier account and shipment, to protect the
+        carrier's API. Repeated calls within that window return the cached payload.
+      operationId: live-track-shipment
+      parameters:
+        - name: shipment_id
+          in: path
+          required: true
+          description: Carriyo `shipment_id` or your own `partner_shipment_reference`. The value is matched against `shipment_id` first, then `partner_shipment_reference`.
+          schema:
+            type: string
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: tenant-id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Driver location and ETA for the in-flight shipment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/live-tracking-info'
+        '400':
+          description: The shipment is not `out_for_collection` or `out_for_delivery`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/create-shipment-error-response'
+              examples:
+                '400':
+                  value:
+                    status: '400'
+                    timestamp: '2026-11-12T10:09:00.565Z'
+                    errors:
+                      - 'Shipment is not in a live trackable status.'
   '/shipments/{shipment_id}':
     get:
       tags:
@@ -3467,6 +3527,35 @@ paths:
 
 components:
   schemas:
+    live-tracking-info:
+      title: Live Tracking Info
+      type: object
+      description: Driver location, contact details, and ETA for a shipment currently being collected or delivered. Returned by **Get live tracking** for supported carriers.
+      properties:
+        driver_location:
+          type: object
+          description: Current geographic position of the driver, as reported by the carrier.
+          properties:
+            latitude:
+              type: number
+              format: double
+              example: 25.2048
+            longitude:
+              type: number
+              format: double
+              example: 55.2708
+        driver_name:
+          type: string
+          description: Driver's name, where the carrier exposes it.
+          example: Jane Doe
+        driver_phone:
+          type: string
+          description: Driver's contact phone, where the carrier exposes it.
+          example: '+971501234567'
+        estimated_time:
+          type: string
+          format: date-time
+          description: Carrier-reported estimated arrival time for the next stop.
     attribute-request:
       title: Attribute Request
       required:
